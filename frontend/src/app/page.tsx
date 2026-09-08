@@ -104,8 +104,19 @@ export default async function HomePage() {
                 </span>
                 <p className="font-extrabold mt-3 text-base text-[#12071f] leading-snug">{venue.location}</p>
                 <p className="mt-1.5 text-xs text-[#6d6178] font-medium">{venue.theme}</p>
+                <div className="mt-2.5">
+                  {venue.participatingClasses && venue.participatingClasses.length > 0 ? (
+                    <p className="text-[10px] text-[#4b1d7a]/80 font-medium truncate">
+                      👥 {venue.participatingClasses.join(", ")}
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-amber-700 font-medium">
+                      ⚠️ Not Allocated
+                    </p>
+                  )}
+                </div>
               </div>
-              <p className="mt-5 text-xs font-bold text-[#4b1d7a] flex items-center justify-between relative">
+              <p className="mt-4 text-xs font-bold text-[#4b1d7a] flex items-center justify-between relative">
                 <span>{venue.tribeCount} tribes</span>
                 <span className="transition-transform group-hover:translate-x-1">→</span>
               </p>

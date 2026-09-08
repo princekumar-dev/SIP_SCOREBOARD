@@ -14,6 +14,7 @@ export default async function VenuePage({ params }: { params: Promise<{ id: stri
     description: string;
     motif: string;
     tribeCount: number;
+    participatingClasses?: string[];
     lastUpdated: string;
     leaderboard: LeaderboardRow[];
   }>(`/api/venues/${id}`);
@@ -29,6 +30,21 @@ export default async function VenuePage({ params }: { params: Promise<{ id: stri
           </div>
           <h1 className="display text-4xl md:text-5xl">{data.theme}</h1>
           <p className="mt-3 text-[#6d6178] leading-relaxed">{data.location} · {data.tribeCount} tribes</p>
+          
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#6d6178]">Participating Classes:</span>
+            {data.participatingClasses && data.participatingClasses.length > 0 ? (
+              data.participatingClasses.map((cls) => (
+                <span key={cls} className="rounded-md bg-[#4b1d7a]/[0.08] border border-[#4b1d7a]/15 px-2.5 py-1 text-xs font-semibold text-[#4b1d7a]">
+                  {cls}
+                </span>
+              ))
+            ) : (
+              <span className="rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                ⚠️ Not Allocated
+              </span>
+            )}
+          </div>
         </div>
         <p className="mt-4 max-w-2xl animate-fade-in-up delay-2 leading-relaxed">{data.description}</p>
         <div className="mt-10 animate-fade-in-up delay-4">

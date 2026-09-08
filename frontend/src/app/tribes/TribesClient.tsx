@@ -219,9 +219,9 @@ export function TribesClient({
                 </p>
 
                 <p className="mt-2 flex items-center gap-1.5 text-xs text-[#6d6178]">
-                  <span className="text-[#e4b84a]">📍</span>
-                  <span className={tribe.location ? "font-medium text-[#12071f]" : "italic text-[#6d6178]/70"}>
-                    {tribe.location || "Hall Assignment in Progress"}
+                  <span>{tribe.location ? "📍" : "⚠️"}</span>
+                  <span className={tribe.location ? "font-medium text-[#12071f]" : "font-semibold text-amber-700"}>
+                    {tribe.location || "Not Allocated"}
                   </span>
                 </p>
               </div>
@@ -269,8 +269,8 @@ export function TribesClient({
                 <span className="text-[10px] text-[#6d6178]">{tribe.groupName || tribe.theme}</span>
               </div>
               <div className="min-w-0">
-                <span className="text-xs font-medium text-[#4b1d7a] block truncate">
-                  📍 {tribe.location || "Pending Hall Assignment"}
+                <span className={`text-xs block truncate ${tribe.location ? "font-medium text-[#4b1d7a]" : "font-semibold text-amber-700"}`}>
+                  {tribe.location ? `📍 ${tribe.location}` : "⚠️ Not Allocated"}
                 </span>
                 <span className="text-[11px] text-[#6d6178] truncate block">{tribe.venueTheme || tribe.theme}</span>
               </div>

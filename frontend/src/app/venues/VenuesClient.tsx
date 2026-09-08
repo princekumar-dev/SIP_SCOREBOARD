@@ -83,23 +83,28 @@ export function VenuesClient({ initialVenues }: { initialVenues: Venue[] }) {
                 </p>
 
                 {/* Dynamically Updated Participating Classes */}
-                {venue.participatingClasses && venue.participatingClasses.length > 0 && (
-                  <div className="mt-4 pt-3.5 border-t border-[#4b1d7a]/[0.08]">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#6d6178] block mb-2">
-                      Participating Classes:
-                    </span>
+                <div className="mt-4 pt-3.5 border-t border-[#4b1d7a]/[0.08]">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#6d6178] block mb-2">
+                    Participating Classes:
+                  </span>
+                  {venue.participatingClasses && venue.participatingClasses.length > 0 ? (
                     <div className="flex flex-wrap gap-1.5">
                       {venue.participatingClasses.map((cls) => (
                         <span
                           key={cls}
-                          className="rounded-md bg-[#4b1d7a]/[0.05] border border-[#4b1d7a]/[0.08] px-2.5 py-0.5 text-xs font-semibold text-[#4b1d7a]"
+                          className="rounded-md bg-[#4b1d7a]/[0.06] border border-[#4b1d7a]/[0.1] px-2.5 py-1 text-xs font-semibold text-[#4b1d7a]"
                         >
                           {cls}
                         </span>
                       ))}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 border border-amber-200/80 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                      <span>⚠️</span>
+                      <span>Not Allocated</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Card Footer */}
