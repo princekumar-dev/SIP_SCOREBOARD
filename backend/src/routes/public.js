@@ -1,0 +1,282 @@
+const express = require("express");
+const mongoose = require("mongoose");
+const Venue = require("../models/Venue");
+const Tribe = require("../models/Tribe");
+const Member = require("../models/Member");
+const Event = require("../models/Event");
+const Score = require("../models/Score");
+const { buildLeaderboard, getTribeTotal } = require("../utils/ranking");
+
+const router = express.Router();
+
+const ROMAN_MAP = {
+  "1": "Group I",
+  "2": "Group II",
+  "3": "Group III",
+  "4": "Group IV",
+  "5": "Group V",
+  "i": "Group I",
+  "ii": "Group II",
+  "iii": "Group III",
+  "iv": "Group IV",
+  "v": "Group V",
+  "group 1": "Group I",
+  "group 2": "Group II",
+  "group 3": "Group III",
+  "group 4": "Group IV",
+  "group 5": "Group V",
+  "group1": "Group I",
+  "group2": "Group II",
+  "group3": "Group III",
+  "group4": "Group IV",
+  "group5": "Group V",
+  "group i": "Group I",
+  "group ii": "Group II",
+  "group iii": "Group III",
+  "group iv": "Group IV",
+  "group v": "Group V",
+};
+
+async function getLeaderboardForIdentifier(param, res) {
+  let venue = null;
+  const trimmed = String(param || "").trim();
+  const normalizedGroup = ROMAN_MAP[trimmed.toLowerCase()] || null;
+
+  if (mongoose.Types.ObjectId.isValid(trimmed)) {
+    venue = await Venue.findById(trimmed).lean();
+  }
+
+  if (!venue && normalizedGroup) {
+    venue = await Venue.findOne({ groupName: normalizedGroup }).lean();
+  }
+
+  if (!venue) {
+    venue = await Venue.findOne({
+      $or: [
+        { groupName: new RegExp(`^${trimmed}$`, "i") },
+        { location: new RegExp(trimmed, "i") },
+        { theme: new RegExp(trimmed, "i") },
+        { venueName: new RegExp(trimmed, "i") },
+      ],
+    }).lean();
+  }
+
+  const effectiveGroup = normalizedGroup || venue?.groupName || (trimmed.toLowerCase().startsWith("group") ? trimmed : null);
+
+  let rows = [];
+  if (venue) {
+    rows = await buildLeaderboard({ venueId: venue._id, groupName: venue.groupName });
+  } else if (effectiveGroup) {
+    rows = await buildLeaderboard({ groupName: effectiveGroup });
+  } else {
+    rows = await buildLeaderboard();
+  }
+
+  return res.json({
+    type: venue || effectiveGroup ? "venue" : "overall",
+    venue: venue
+      ? {
+          id: String(venue._id),
+          groupName: venue.groupName,
+          theme: venue.theme,
+          location: venue.location,
+          venueName: venue.venueName,
+          participatingClasses: venue.participatingClasses || [],
+          motif: venue.motif,
+        }
+      : effectiveGroup
+      ? {
+          id: effectiveGroup,
+          groupName: effectiveGroup,
+          theme: effectiveGroup,
+          location: "Assigned Venue",
+          venueName: "Station",
+        }
+      : null,
+    lastUpdated: new Date().toISOString(),
+    rows,
+  });
+}
+
+router.get("/venues", async (_req, res) => {
+  const venues = await Venue.find().sort({ groupName: 1 }).lean();
+  const tribes = await Tribe.aggregate([{ $group: { _id: "$venueId", count: { $sum: 1 } } }]);
+  const counts = Object.fromEntries(tribes.map((t) => [String(t._id), t.count]));
+  res.json(
+    venues.map((venue) => ({
+      id: String(venue._id),
+      groupName: venue.groupName,
+      venueName: venue.venueName,
+      theme: venue.theme,
+      location: venue.location,
+      description: venue.description,
+      motif: venue.motif,
+      participatingClasses: venue.participatingClasses || [],
+      isLocked: venue.isLocked,
+      tribeCount: counts[String(venue._id)] || 0,
+    }))
+  );
+});
+
+router.get("/venues/:id", async (req, res) => {
+  let venue = null;
+  if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+    venue = await Venue.findById(req.params.id).lean();
+  }
+  if (!venue) {
+    venue = await Venue.findOne({ groupName: req.params.id }).lean();
+  }
+  if (!venue) return res.status(404).json({ error: "Venue not found." });
+  const leaderboard = await buildLeaderboard({ venueId: venue._id, groupName: venue.groupName });
+  res.json({
+    id: String(venue._id),
+    groupName: venue.groupName,
+    venueName: venue.venueName,
+    theme: venue.theme,
+    location: venue.location,
+    description: venue.description,
+    motif: venue.motif,
+    participatingClasses: venue.participatingClasses || [],
+    isLocked: venue.isLocked,
+    tribeCount: leaderboard.length,
+    lastUpdated: new Date().toISOString(),
+    leaderboard,
+  });
+});
+
+router.get("/leaderboard", async (req, res) => {
+  const { group, groupName, venue, venueId } = req.query || {};
+  const filterParam = group || groupName || venue || venueId;
+  if (filterParam && filterParam !== "all") {
+    return getLeaderboardForIdentifier(filterParam, res);
+  }
+  const rows = await buildLeaderboard();
+  res.json({ type: "overall", lastUpdated: new Date().toISOString(), rows });
+});
+
+router.get("/leaderboard/venue/:id", async (req, res) => {
+  return getLeaderboardForIdentifier(req.params.id, res);
+});
+
+router.get("/leaderboard/group/:id", async (req, res) => {
+  return getLeaderboardForIdentifier(req.params.id, res);
+});
+
+router.get("/events", async (_req, res) => {
+  const events = await Event.find().sort({ createdAt: 1 }).lean();
+  res.json(
+    events.map((event) => ({
+      id: String(event._id),
+      eventName: event.eventName,
+      description: event.description,
+      maximumScore: event.maximumScore,
+      status: event.status,
+    }))
+  );
+});
+
+router.get("/tribes", async (req, res) => {
+  const q = String(req.query.q || "").trim();
+  const groupName = String(req.query.groupName || req.query.group || "").trim();
+  const venueId = String(req.query.venueId || "").trim();
+
+  const filter = { status: "active" };
+  if (groupName && groupName !== "all") {
+    filter.groupName = groupName;
+  }
+  if (venueId && venueId !== "all") {
+    filter.venueId = venueId;
+  }
+
+  const tribes = await Tribe.find(filter).populate("venueId").sort({ tribeCode: 1 }).lean();
+  const overall = await buildLeaderboard();
+  const rankMap = Object.fromEntries(overall.map((row) => [row.id, row]));
+
+  let results = tribes.map((tribe) => ({
+    id: String(tribe._id),
+    tribeCode: tribe.tribeCode,
+    tribeName: tribe.tribeName,
+    theme: tribe.theme,
+    groupName: tribe.groupName,
+    venueId: tribe.venueId?._id ? String(tribe.venueId._id) : "",
+    venueTheme: tribe.venueId?.theme || tribe.theme,
+    location: tribe.venueId?.location || "",
+    motif: tribe.venueId?.motif || "creative",
+    rank: rankMap[String(tribe._id)]?.rank || null,
+    totalScore: rankMap[String(tribe._id)]?.totalScore || 0,
+  }));
+
+  if (q) {
+    const needle = q.toLowerCase();
+    const members = await Member.find({ name: new RegExp(q, "i") }).lean();
+    const memberTribeIds = new Set(members.map((m) => String(m.tribeId)));
+    results = results.filter(
+      (tribe) =>
+        tribe.tribeName.toLowerCase().includes(needle) ||
+        tribe.tribeCode.toLowerCase().includes(needle) ||
+        tribe.location.toLowerCase().includes(needle) ||
+        memberTribeIds.has(tribe.id)
+    );
+  }
+
+  res.json(results);
+});
+
+router.get("/tribes/:id", async (req, res) => {
+  const tribe = await Tribe.findById(req.params.id).populate("venueId").lean();
+  if (!tribe) return res.status(404).json({ error: "Tribe not found." });
+
+  const [members, events, scores, overall] = await Promise.all([
+    Member.find({ tribeId: tribe._id }).sort({ name: 1 }).lean(),
+    Event.find().sort({ createdAt: 1 }).lean(),
+    Score.find({ tribeId: tribe._id }).lean(),
+    buildLeaderboard(),
+  ]);
+  const scoreMap = Object.fromEntries(scores.map((s) => [String(s.eventId), s]));
+  const standing = overall.find((row) => row.id === String(tribe._id));
+  const venueBoard = await buildLeaderboard({ venueId: tribe.venueId._id });
+  const venueStanding = venueBoard.find((row) => row.id === String(tribe._id));
+
+  res.json({
+    id: String(tribe._id),
+    tribeCode: tribe.tribeCode,
+    tribeName: tribe.tribeName,
+    theme: tribe.theme,
+    status: tribe.status,
+    venue: {
+      id: String(tribe.venueId._id),
+      theme: tribe.venueId.theme,
+      location: tribe.venueId.location,
+      venueName: tribe.venueId.venueName,
+      motif: tribe.venueId.motif,
+    },
+    overallRank: standing?.rank || null,
+    venueRank: venueStanding?.rank || null,
+    totalScore: standing?.totalScore || (await getTribeTotal(tribe._id)),
+    events: events.map((event) => ({
+      id: String(event._id),
+      eventName: event.eventName,
+      maximumScore: event.maximumScore,
+      score: scoreMap[String(event._id)]?.score ?? null,
+      remarks: scoreMap[String(event._id)]?.remarks || "",
+    })),
+    members: members.map((member) => ({
+      id: String(member._id),
+      name: member.name,
+      department: member.department,
+      classSection: member.classSection,
+    })),
+  });
+});
+
+router.get("/stats", async (_req, res) => {
+  const [tribes, venues, events, scores] = await Promise.all([
+    Tribe.countDocuments({ status: "active" }),
+    Venue.countDocuments(),
+    Event.countDocuments({ status: "active" }),
+    Score.countDocuments(),
+  ]);
+  res.json({ tribes, venues, events, scores });
+});
+
+module.exports = router;
