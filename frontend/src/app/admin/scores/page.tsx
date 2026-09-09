@@ -34,6 +34,14 @@ const GROUP_ICONS: Record<string, string> = {
   "Group V": "⚡",
 };
 
+const ALL_GROUPS = [
+  { groupName: "Group I", theme: "Creative & Design", icon: "🎨" },
+  { groupName: "Group II", theme: "Technology & Innovation", icon: "💻" },
+  { groupName: "Group III", theme: "Space & Cosmic", icon: "🚀" },
+  { groupName: "Group IV", theme: "Legends & Mythology", icon: "🛡️" },
+  { groupName: "Group V", theme: "Power & Energy", icon: "⚡" },
+];
+
 export default function ScoresPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -138,11 +146,21 @@ export default function ScoresPage() {
   );
 
   const groupsFromVenues = useMemo(() => {
-    return venues.map((v) => ({
-      groupName: v.groupName,
-      theme: v.theme || "Untitled",
-      icon: GROUP_ICONS[v.groupName] || "🎯",
-    }));
+    const map = new Map<string, { groupName: string; theme: string; icon: string }>();
+    ALL_GROUPS.forEach((g) => {
+      map.set(g.groupName, { ...g });
+    });
+    venues.forEach((v) => {
+      if (v.groupName) {
+        const existing = map.get(v.groupName);
+        map.set(v.groupName, {
+          groupName: v.groupName,
+          theme: v.theme || existing?.theme || "Untitled",
+          icon: GROUP_ICONS[v.groupName] || existing?.icon || "🎯",
+        });
+      }
+    });
+    return Array.from(map.values());
   }, [venues]);
 
   const activeGroup = useMemo(
@@ -166,10 +184,15 @@ export default function ScoresPage() {
       setTribeRows((prev) =>
         prev.map((r) => ({ ...r, currentVenue: res.venueLocation }))
       );
-      // Sync venue group in state
-      setVenues((prev) =>
-        prev.map((v) => (v.id === selectedVenueId ? { ...v, groupName: selectedGroupName } : v))
-      );
+      // Re-fetch all venues from server so accurate swapped assignments are reflected
+      try {
+        const freshVenues = await apiGet<Venue[]>("/api/venues");
+        setVenues(freshVenues);
+      } catch {
+        setVenues((prev) =>
+          prev.map((v) => (v.id === selectedVenueId ? { ...v, groupName: selectedGroupName } : v))
+        );
+      }
       if (currentUser && currentUser.venue) {
         setCurrentUser((prev: any) => ({
           ...prev,

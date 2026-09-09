@@ -99,7 +99,7 @@ async function getLeaderboardForIdentifier(param, res) {
 }
 
 router.get("/venues", async (_req, res) => {
-  const venues = await Venue.find().sort({ groupName: 1 }).lean();
+  const venues = await Venue.find().sort({ venueName: 1 }).lean();
   const tribes = await Tribe.aggregate([{ $group: { _id: "$venueId", count: { $sum: 1 } } }]);
   const counts = Object.fromEntries(tribes.map((t) => [String(t._id), t.count]));
   res.json(

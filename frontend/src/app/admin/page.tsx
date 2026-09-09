@@ -48,6 +48,14 @@ const GROUP_ICONS: Record<string, string> = {
   "Group V": "⚡",
 };
 
+const ALL_GROUPS = [
+  { groupName: "Group I", theme: "Creative & Design", icon: "🎨" },
+  { groupName: "Group II", theme: "Technology & Innovation", icon: "💻" },
+  { groupName: "Group III", theme: "Space & Cosmic", icon: "🚀" },
+  { groupName: "Group IV", theme: "Legends & Mythology", icon: "🛡️" },
+  { groupName: "Group V", theme: "Power & Energy", icon: "⚡" },
+];
+
 export default function AdminHome() {
   const [data, setData] = useState<Dash | null>(null);
   const [user, setUser] = useState<any>(null);
@@ -90,17 +98,37 @@ export default function AdminHome() {
 
   // Build group data dynamically from real venue data
   const groupsFromVenues = useMemo(() => {
-    if (!data?.venues) return [];
-    return data.venues.map((v) => ({
-      groupName: v.groupName,
-      theme: v.theme,
-      icon: GROUP_ICONS[v.groupName] || "🛡️",
-      location: v.location,
-      venueName: v.venueName,
-      classes: v.participatingClasses || [],
-      motif: v.motif || "creative",
-      tribeCount: v.tribeCount,
-    }));
+    const map = new Map<string, any>();
+    ALL_GROUPS.forEach((g) => {
+      map.set(g.groupName, {
+        groupName: g.groupName,
+        theme: g.theme,
+        icon: g.icon,
+        location: "",
+        venueName: "",
+        classes: [],
+        motif: "creative",
+        tribeCount: 18,
+      });
+    });
+    if (data?.venues) {
+      data.venues.forEach((v) => {
+        if (v.groupName) {
+          const existing = map.get(v.groupName);
+          map.set(v.groupName, {
+            groupName: v.groupName,
+            theme: v.theme || existing?.theme || "Untitled",
+            icon: GROUP_ICONS[v.groupName] || existing?.icon || "🛡️",
+            location: v.location || existing?.location || "",
+            venueName: v.venueName || existing?.venueName || "",
+            classes: v.participatingClasses || existing?.classes || [],
+            motif: v.motif || existing?.motif || "creative",
+            tribeCount: v.tribeCount || existing?.tribeCount || 18,
+          });
+        }
+      });
+    }
+    return Array.from(map.values());
   }, [data?.venues]);
 
   const activeGroup = useMemo(() => {
