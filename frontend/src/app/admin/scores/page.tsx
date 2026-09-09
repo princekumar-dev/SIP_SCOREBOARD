@@ -363,28 +363,44 @@ export default function ScoresPage() {
               </label>
               <span className="text-[11px] text-[#6d6178]">Choose any group present in your venue hall</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5">
-              {groupsFromVenues.map((g) => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+              {groupsFromVenues.map((g, idx) => {
                 const isSelected = selectedGroupName === g.groupName;
+                const groupSelectedStyle =
+                  idx === 0
+                    ? "bg-gradient-to-br from-[#12071f] via-[#2d0a1b] to-[#12071f] text-white border-rose-400 ring-2 ring-rose-400/40 shadow-lg shadow-rose-900/30"
+                    : idx === 1
+                    ? "bg-gradient-to-br from-[#12071f] via-[#082032] to-[#12071f] text-white border-cyan-400 ring-2 ring-cyan-400/40 shadow-lg shadow-cyan-900/30"
+                    : idx === 2
+                    ? "bg-gradient-to-br from-[#12071f] via-[#260c38] to-[#12071f] text-white border-purple-400 ring-2 ring-purple-400/40 shadow-lg shadow-purple-900/30"
+                    : idx === 3
+                    ? "bg-gradient-to-br from-[#12071f] via-[#2d2208] to-[#12071f] text-white border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-amber-900/30"
+                    : "bg-gradient-to-br from-[#12071f] via-[#331405] to-[#12071f] text-white border-orange-400 ring-2 ring-orange-400/40 shadow-lg shadow-orange-900/30";
+
                 return (
                   <button
                     key={g.groupName}
                     type="button"
                     onClick={() => setSelectedGroupName(g.groupName)}
-                    className={`rounded-2xl p-3.5 text-left transition-all duration-200 border flex flex-col justify-between ${
+                    className={`rounded-2xl p-4 text-left transition-all duration-300 border flex flex-col justify-between cursor-pointer hover-lift ${
                       isSelected
-                        ? "bg-[#12071f] text-white border-[#e4b84a] shadow-lg shadow-[#12071f]/20 ring-2 ring-[#e4b84a]/30"
+                        ? groupSelectedStyle
                         : "bg-white text-[#12071f] border-[#4b1d7a]/15 hover:border-[#4b1d7a]/35 hover:bg-white"
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-lg">{g.icon}</span>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider ${isSelected ? "text-[#e4b84a]" : "text-[#4b1d7a]"}`}>
+                      <span className="text-xl transition-transform duration-300 hover:scale-125">{g.icon}</span>
+                      <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isSelected ? "text-[#e4b84a]" : "text-[#4b1d7a]"}`}>
                         {g.groupName}
                       </span>
                     </div>
-                    <p className="font-bold text-xs mt-2 leading-tight">{g.theme}</p>
-                    <span className="text-[10px] opacity-60 mt-1">18 Teams</span>
+                    <p className="font-extrabold text-xs mt-2.5 leading-snug">{g.theme}</p>
+                    <div className="mt-2 flex items-center justify-between text-[10px]">
+                      <span className="opacity-70 font-semibold">18 Teams</span>
+                      {isSelected && (
+                        <span className="h-2 w-2 rounded-full bg-[#35d07f] animate-pulse" />
+                      )}
+                    </div>
                   </button>
                 );
               })}

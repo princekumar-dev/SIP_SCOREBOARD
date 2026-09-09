@@ -140,112 +140,159 @@ export function TribesClient({
           <button
             type="button"
             onClick={() => setActiveGroup("all")}
-            className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 ${
+            className={`rounded-full px-4 py-2 text-xs font-bold transition-all duration-300 cursor-pointer ${
               activeGroup === "all"
-                ? "bg-[#12071f] text-[#e4b84a] shadow-md ring-1 ring-[#e4b84a]/20"
-                : "bg-white text-[#12071f] border border-[#4b1d7a]/[0.1] hover:border-[#4b1d7a]/25"
+                ? "bg-[#12071f] text-[#e4b84a] shadow-md ring-2 ring-[#e4b84a]/30 scale-105"
+                : "bg-white text-[#12071f] border border-[#4b1d7a]/15 hover:border-[#4b1d7a]/30"
             }`}
           >
             All Groups (90)
           </button>
-          {GROUPS.map((g) => (
-            <button
-              key={g.groupName}
-              type="button"
-              onClick={() => setActiveGroup(g.groupName)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all duration-200 flex items-center gap-1.5 ${
-                activeGroup === g.groupName
-                  ? "bg-[#4b1d7a] text-[#e4b84a] shadow-md ring-1 ring-[#e4b84a]/20"
-                  : "bg-white text-[#4b1d7a] border border-[#4b1d7a]/[0.1] hover:border-[#4b1d7a]/25"
-              }`}
-            >
-              <span>{g.icon}</span>
-              <span>{g.groupName}: {g.theme} (18)</span>
-            </button>
-          ))}
+          {GROUPS.map((g, idx) => {
+            const isActive = activeGroup === g.groupName;
+            const activeClass =
+              idx === 0
+                ? "pill-g1-active scale-105"
+                : idx === 1
+                ? "pill-g2-active scale-105"
+                : idx === 2
+                ? "pill-g3-active scale-105"
+                : idx === 3
+                ? "pill-g4-active scale-105"
+                : "pill-g5-active scale-105";
+
+            const defaultPillClass =
+              idx === 0
+                ? "pill-g1 hover:border-rose-400"
+                : idx === 1
+                ? "pill-g2 hover:border-cyan-400"
+                : idx === 2
+                ? "pill-g3 hover:border-purple-400"
+                : idx === 3
+                ? "pill-g4 hover:border-amber-400"
+                : "pill-g5 hover:border-orange-400";
+
+            return (
+              <button
+                key={g.groupName}
+                type="button"
+                onClick={() => setActiveGroup(g.groupName)}
+                className={`rounded-full px-4 py-2 text-xs font-bold transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
+                  isActive ? activeClass : defaultPillClass
+                }`}
+              >
+                <span>{g.icon}</span>
+                <span>{g.groupName}: {g.theme} (18)</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Live Sync & Results Count */}
       <div className="mt-5 flex flex-wrap items-center justify-between gap-2 text-xs text-[#6d6178]">
         <div className="flex items-center gap-2">
-          <span>Showing <strong className="text-[#12071f]">{filteredTribes.length}</strong> tribes</span>
+          <span>Showing <strong className="text-[#12071f] font-bold">{filteredTribes.length}</strong> tribes</span>
           {activeGroup !== "all" && (
-            <span className="rounded-md bg-[#4b1d7a]/[0.08] px-2 py-0.5 text-[11px] font-bold text-[#4b1d7a]">
+            <span className="rounded-full bg-[#4b1d7a]/10 px-2.5 py-0.5 text-[11px] font-extrabold text-[#4b1d7a] border border-[#4b1d7a]/20">
               {activeGroup}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
           <LiveBadge live={live} />
-          <span className="text-[11px] font-medium text-emerald-700">Real-time Location & Score Sync</span>
+          <span className="text-[11px] font-semibold text-emerald-700">Real-time Location & Score Sync</span>
         </div>
       </div>
 
       {/* Display: Grid View */}
       {viewMode === "grid" ? (
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredTribes.map((tribe) => (
-            <div
-              key={tribe.id}
-              onClick={() => setSelectedTribeId(tribe.id)}
-              className="panel group relative flex cursor-pointer flex-col justify-between p-5 card-glow"
-            >
-              <div>
-                <div className="flex items-start justify-between gap-2">
-                  <span className="rounded-lg bg-[#4b1d7a]/[0.08] px-2.5 py-1 text-xs font-mono font-bold text-[#4b1d7a] border border-[#4b1d7a]/[0.06]">
-                    {tribe.tribeCode}
-                  </span>
-                  <div className="text-right">
-                    {tribe.rank ? (
-                      <>
-                        <span className="text-[9px] tracking-[0.16em] uppercase text-[#6d6178] font-semibold">Rank</span>
-                        <p className="display text-lg font-bold text-[#4b1d7a] leading-none">
-                          {rankLabel(tribe.rank)}
-                        </p>
-                      </>
-                    ) : (
-                      <span className="text-[10px] text-[#6d6178] font-medium">Unranked</span>
-                    )}
-                  </div>
-                </div>
+          {filteredTribes.map((tribe) => {
+            const groupIdx = GROUPS.findIndex((g) => g.groupName === tribe.groupName);
+            const cardThemeClass =
+              groupIdx === 0
+                ? "group-card-1"
+                : groupIdx === 1
+                ? "group-card-2"
+                : groupIdx === 2
+                ? "group-card-3"
+                : groupIdx === 3
+                ? "group-card-4"
+                : groupIdx === 4
+                ? "group-card-5"
+                : "";
 
-                <h2 className="display mt-3 text-xl font-bold text-[#160b24] group-hover:text-[#4b1d7a] transition-colors leading-tight">
-                  {tribe.tribeName}
-                </h2>
-
-                <p className="mt-1.5 text-xs font-semibold text-[#4b1d7a]">
-                  {tribe.groupName ? `${tribe.groupName}: ${tribe.theme}` : tribe.theme}
-                </p>
-
-                <p className="mt-2 flex items-center gap-1.5 text-xs text-[#6d6178]">
-                  <span>{tribe.location ? "📍" : "⚠️"}</span>
-                  <span className={tribe.location ? "font-medium text-[#12071f]" : "font-semibold text-amber-700"}>
-                    {tribe.location || "Not Allocated"}
-                  </span>
-                </p>
-              </div>
-
-              <div className="mt-5 flex items-center justify-between border-t border-[#4b1d7a]/[0.08] pt-3.5">
+            return (
+              <div
+                key={tribe.id}
+                onClick={() => setSelectedTribeId(tribe.id)}
+                className={`panel group relative flex cursor-pointer flex-col justify-between p-5 hover-lift tilt-hover ${cardThemeClass}`}
+              >
                 <div>
-                  <span className="text-[9px] uppercase tracking-[0.16em] text-[#6d6178] font-semibold">Total Score</span>
-                  <p className="display text-2xl font-extrabold text-[#4b1d7a] leading-none">
-                    {tribe.totalScore}
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="rounded-xl bg-black/5 px-2.5 py-1 text-xs font-mono font-extrabold text-[#12071f] border border-black/10">
+                      {tribe.tribeCode}
+                    </span>
+                    <div className="text-right">
+                      {tribe.rank ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-[9px] tracking-wider uppercase text-[#6d6178] font-bold">Rank</span>
+                          <span className={`display rounded-lg px-2 py-0.5 text-xs font-extrabold ${
+                            tribe.rank === 1
+                              ? "bg-[#e4b84a] text-[#12071f]"
+                              : tribe.rank === 2
+                              ? "bg-slate-300 text-slate-800"
+                              : tribe.rank === 3
+                              ? "bg-amber-600 text-white"
+                              : "bg-black/5 text-[#4b1d7a]"
+                          }`}>
+                            {rankLabel(tribe.rank)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-[#6d6178] font-medium">Unranked</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <h2 className="display mt-3 text-xl font-bold text-[#160b24] group-hover:text-[#4b1d7a] transition-colors leading-tight truncate">
+                    {tribe.tribeName}
+                  </h2>
+
+                  <p className="mt-1 text-xs font-bold text-[#4b1d7a]">
+                    {tribe.groupName ? `${tribe.groupName} · ${tribe.theme}` : tribe.theme}
+                  </p>
+
+                  <p className="mt-2.5 flex items-center gap-1.5 text-xs text-[#6d6178]">
+                    <span>{tribe.location ? "📍" : "⚠️"}</span>
+                    <span className={tribe.location ? "font-semibold text-[#12071f]" : "font-semibold text-amber-700"}>
+                      {tribe.location || "Not Allocated"}
+                    </span>
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedTribeId(tribe.id);
-                  }}
-                  className="rounded-full bg-[#4b1d7a]/[0.08] px-3.5 py-1.5 text-xs font-bold text-[#4b1d7a] group-hover:bg-[#4b1d7a] group-hover:text-white transition-all duration-200"
-                >
-                  Quick View →
-                </button>
+
+                <div className="mt-5 flex items-center justify-between border-t border-black/[0.06] pt-3.5">
+                  <div>
+                    <span className="text-[9px] uppercase tracking-wider text-[#6d6178] font-bold">Total Score</span>
+                    <p className="display text-2xl font-extrabold text-[#12071f] group-hover:text-[#4b1d7a] transition-colors leading-none tabular-nums mt-0.5">
+                      {tribe.totalScore} <span className="text-xs font-sans font-normal text-[#6d6178]">pts</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedTribeId(tribe.id);
+                    }}
+                    className="rounded-xl bg-[#4b1d7a] px-3.5 py-1.5 text-xs font-bold text-[#e4b84a] shadow-xs hover:brightness-110 active:scale-95 transition-all"
+                  >
+                    Details →
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         /* Display: Table View */
