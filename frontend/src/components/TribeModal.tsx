@@ -42,9 +42,9 @@ export function TribeModal({
   if (!tribeId) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-4 backdrop-blur-sm animate-fade-in" onClick={onClose}>
       <div
-        className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-[#e4b84a]/20 bg-[#12071f] p-6 text-[#f7f1e6] shadow-2xl md:p-8 animate-scale-in"
+        className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl sm:rounded-3xl border border-[#e4b84a]/20 bg-[#12071f] p-5 sm:p-6 md:p-8 text-[#f7f1e6] shadow-2xl animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Ambient glow */}
@@ -54,7 +54,7 @@ export function TribeModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/5 text-sm text-white/70 hover:border-white/30 hover:text-white transition-all z-10"
+          className="absolute right-3.5 top-3.5 sm:right-5 sm:top-5 grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-full border border-white/15 bg-white/5 text-sm text-white/70 hover:border-white/30 hover:text-white transition-all z-10"
         >
           ✕
         </button>
@@ -66,7 +66,7 @@ export function TribeModal({
           </div>
         ) : data ? (
           <div className="relative z-[1]">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 pr-8">
               <span className="rounded-full bg-[#e4b84a]/15 border border-[#e4b84a]/25 px-3 py-1 text-xs font-bold tracking-wider text-[#e4b84a]">
                 {data.tribeCode}
               </span>
@@ -75,20 +75,20 @@ export function TribeModal({
               </span>
             </div>
 
-            <h2 className="display mt-3 text-3xl font-bold md:text-4xl text-[#f7f1e6]">{data.tribeName}</h2>
+            <h2 className="display mt-3 text-2xl sm:text-3xl md:text-4xl font-bold text-[#f7f1e6]">{data.tribeName}</h2>
 
-            <div className="mt-6 grid grid-cols-3 gap-3">
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 text-center">
-                <p className="text-[9px] tracking-[0.18em] uppercase text-[#f7f1e6]/50 font-semibold">Overall Rank</p>
-                <p className="display mt-2 text-2xl font-bold text-[#e4b84a]">{rankLabel(data.overallRank)}</p>
+            <div className="mt-5 sm:mt-6 grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="rounded-xl sm:rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2.5 sm:p-4 text-center">
+                <p className="text-[8px] sm:text-[9px] tracking-[0.1em] sm:tracking-[0.18em] uppercase text-[#f7f1e6]/50 font-semibold truncate">Overall Rank</p>
+                <p className="display mt-1 sm:mt-2 text-xl sm:text-2xl font-bold text-[#e4b84a]">{rankLabel(data.overallRank)}</p>
               </div>
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 text-center">
-                <p className="text-[9px] tracking-[0.18em] uppercase text-[#f7f1e6]/50 font-semibold">Venue Rank</p>
-                <p className="display mt-2 text-2xl font-bold text-[#f7f1e6]">{rankLabel(data.venueRank)}</p>
+              <div className="rounded-xl sm:rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2.5 sm:p-4 text-center">
+                <p className="text-[8px] sm:text-[9px] tracking-[0.1em] sm:tracking-[0.18em] uppercase text-[#f7f1e6]/50 font-semibold truncate">Venue Rank</p>
+                <p className="display mt-1 sm:mt-2 text-xl sm:text-2xl font-bold text-[#f7f1e6]">{rankLabel(data.venueRank)}</p>
               </div>
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 text-center">
-                <p className="text-[9px] tracking-[0.18em] uppercase text-[#f7f1e6]/50 font-semibold">Total Score</p>
-                <p className="display mt-2 text-2xl font-bold text-[#e4b84a]">{data.totalScore}</p>
+              <div className="rounded-xl sm:rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2.5 sm:p-4 text-center">
+                <p className="text-[8px] sm:text-[9px] tracking-[0.1em] sm:tracking-[0.18em] uppercase text-[#f7f1e6]/50 font-semibold truncate">Total Score</p>
+                <p className="display mt-1 sm:mt-2 text-xl sm:text-2xl font-bold text-[#e4b84a]">{data.totalScore}</p>
               </div>
             </div>
 

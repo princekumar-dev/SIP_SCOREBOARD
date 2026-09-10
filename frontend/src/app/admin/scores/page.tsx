@@ -296,8 +296,8 @@ export default function ScoresPage() {
   return (
     <AdminShell>
       <div className="space-y-6 max-w-6xl mx-auto">
-        {/* Top Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#4b1d7a]/10 pb-5">
+        {/* Header & Main Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#4b1d7a]/10 pb-5">
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-[#12071f] px-3 py-0.5 text-[11px] font-bold text-[#e4b84a]">
@@ -305,7 +305,7 @@ export default function ScoresPage() {
               </span>
               <span className="text-xs text-[#6d6178] font-medium">Real-time Score Management</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-[#12071f] tracking-tight mt-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#12071f] tracking-tight mt-1">
               {selectedGroupName}: {activeGroup.theme}
             </h1>
             <p className="text-xs text-[#6d6178] mt-0.5">
@@ -313,11 +313,11 @@ export default function ScoresPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
             <Link
               href={`/scoreboard?group=${encodeURIComponent(selectedGroupName)}${selectedVenueId ? `&venue=${encodeURIComponent(selectedVenueId)}` : activeVenue?.id ? `&venue=${encodeURIComponent(activeVenue.id)}` : ""}`}
               target="_blank"
-              className="rounded-xl border border-[#4b1d7a]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#4b1d7a] shadow-sm hover:bg-[#4b1d7a]/5 transition flex items-center gap-1.5"
+              className="rounded-xl border border-[#4b1d7a]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#4b1d7a] shadow-sm hover:bg-[#4b1d7a]/5 transition flex items-center justify-center gap-1.5 text-center"
             >
               <span>📺</span>
               <span>Projector ({selectedGroupName})</span>
@@ -327,7 +327,7 @@ export default function ScoresPage() {
               type="button"
               onClick={saveAllScores}
               disabled={savingAll || tribeRows.length === 0}
-              className="rounded-xl bg-gradient-to-r from-[#4b1d7a] to-[#301250] px-5 py-2.5 text-xs font-bold text-[#e4b84a] shadow-md hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50 flex items-center gap-2"
+              className="rounded-xl bg-gradient-to-r from-[#4b1d7a] to-[#301250] px-5 py-2.5 text-xs font-bold text-[#e4b84a] shadow-md hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-center"
             >
               {savingAll ? (
                 <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#e4b84a] border-t-transparent" />
@@ -501,10 +501,10 @@ export default function ScoresPage() {
         </div>
 
         {/* 18 Teams Evaluation Grid */}
-        <div className="rounded-3xl border border-[#4b1d7a]/15 bg-white/90 shadow-sm backdrop-blur-md overflow-hidden">
-          <div className="border-b border-[#4b1d7a]/10 bg-[#4b1d7a]/5 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="rounded-2xl sm:rounded-3xl border border-[#4b1d7a]/15 bg-white/90 shadow-sm backdrop-blur-md overflow-hidden">
+          <div className="border-b border-[#4b1d7a]/10 bg-[#4b1d7a]/5 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-[#12071f]">
+              <h2 className="text-base sm:text-lg font-bold text-[#12071f]">
                 {selectedGroupName}: {activeGroup.theme} · 18 Teams Matrix
               </h2>
               <p className="text-xs text-[#6d6178]">
@@ -536,7 +536,7 @@ export default function ScoresPage() {
                 return (
                   <div
                     key={tribe.tribeId}
-                    className={`grid grid-cols-1 md:grid-cols-12 items-center gap-3 px-6 py-4 transition-colors ${
+                    className={`grid grid-cols-1 md:grid-cols-12 items-center gap-3 px-4 sm:px-6 py-3.5 sm:py-4 transition-colors ${
                       isSaved ? "bg-emerald-50/70" : "hover:bg-white/60"
                     }`}
                   >

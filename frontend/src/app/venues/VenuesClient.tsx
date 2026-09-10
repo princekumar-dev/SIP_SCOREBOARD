@@ -54,7 +54,7 @@ export function VenuesClient({ initialVenues }: { initialVenues: Venue[] }) {
       </div>
 
       {/* Grid of 5 Venues */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {sortedVenues.map((venue, i) => {
           const themeInfo = VENUE_THEME_MAP[venue.groupName] || {
             cardClass: "group-card-1",
@@ -66,12 +66,12 @@ export function VenuesClient({ initialVenues }: { initialVenues: Venue[] }) {
             <Link
               key={venue.id}
               href={`/venue/${venue.id}`}
-              className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl p-6 shadow-sm transition-all duration-300 hover-lift tilt-hover animate-fade-in-up ${themeInfo.cardClass}`}
+              className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm transition-all duration-300 hover-lift tilt-hover animate-fade-in-up ${themeInfo.cardClass}`}
               style={{ animationDelay: `${0.06 + i * 0.06}s` }}
             >
               <div>
                 {/* Header Badge */}
-                <div className="flex items-center justify-between border-b border-black/[0.06] pb-3.5 mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/[0.06] pb-3 mb-3.5">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-extrabold text-[#12071f] bg-black/5 px-2.5 py-1 rounded-xl border border-black/10">
                       {venue.venueName}
@@ -88,7 +88,7 @@ export function VenuesClient({ initialVenues }: { initialVenues: Venue[] }) {
                 </div>
 
                 {/* Hall Name & Domain */}
-                <h2 className="text-xl font-extrabold text-[#12071f] group-hover:text-[#4b1d7a] transition-colors leading-tight">
+                <h2 className="text-lg sm:text-xl font-extrabold text-[#12071f] group-hover:text-[#4b1d7a] transition-colors leading-tight">
                   {venue.location}
                 </h2>
                 <div className="mt-2.5">

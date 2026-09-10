@@ -11,16 +11,16 @@ export default async function OverallPage() {
     const topRows = board.rows || [];
 
     return (
-      <div className="mx-auto max-w-6xl px-5 py-12 space-y-10">
+      <div className="mx-auto max-w-6xl px-4 sm:px-5 py-8 sm:py-12 space-y-8 sm:space-y-10">
         <div className="animate-fade-in-up">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#4b1d7a]/10 border border-[#4b1d7a]/15 px-3.5 py-1 mb-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#4b1d7a]/10 border border-[#4b1d7a]/15 px-3.5 py-1 mb-3 sm:mb-4">
             <span className="h-1.5 w-1.5 rounded-full bg-[#35d07f] animate-pulse" />
             <span className="text-[10px] font-bold tracking-[0.22em] text-[#4b1d7a] uppercase">Arena Overall Standings</span>
           </div>
-          <h1 className="display text-4xl md:text-5xl font-extrabold tracking-tight text-[#12071f]">
+          <h1 className="display text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#12071f]">
             Overall SIP Tribe Ranking
           </h1>
-          <p className="mt-3 max-w-2xl text-[#6d6178] leading-relaxed font-medium">
+          <p className="mt-2 sm:mt-3 max-w-2xl text-xs sm:text-sm text-[#6d6178] leading-relaxed font-medium">
             All 90 tribes across 5 Houses dynamically ranked by real-time cumulative scores.
           </p>
         </div>

@@ -328,74 +328,78 @@ export default function TeamsPage() {
 
         {/* Display: Table or Grid View */}
         {viewMode === "table" ? (
-          <div className="rounded-3xl border border-[#4b1d7a]/15 bg-white/90 shadow-sm backdrop-blur-md overflow-hidden">
-            <div className="grid grid-cols-[80px_1.2fr_1.2fr_auto_90px] gap-3 border-b border-[#4b1d7a]/10 bg-[#4b1d7a]/5 px-6 py-3.5 text-[11px] uppercase tracking-[0.18em] font-bold text-[#6d6178]">
-              <span>Code</span>
-              <span>Tribe & Group</span>
-              <span>Real-Time Venue Location</span>
-              <span className="text-right">Total Score</span>
-              <span className="text-right">Action</span>
-            </div>
+          <div className="rounded-2xl sm:rounded-3xl border border-[#4b1d7a]/15 bg-white/90 shadow-sm backdrop-blur-md overflow-hidden">
+            <div className="overflow-x-auto">
+              <div className="min-w-[640px]">
+                <div className="grid grid-cols-[80px_1.2fr_1.2fr_auto_90px] gap-3 border-b border-[#4b1d7a]/10 bg-[#4b1d7a]/5 px-6 py-3.5 text-[11px] uppercase tracking-[0.18em] font-bold text-[#6d6178]">
+                  <span>Code</span>
+                  <span>Tribe & Group</span>
+                  <span>Real-Time Venue Location</span>
+                  <span className="text-right">Total Score</span>
+                  <span className="text-right">Action</span>
+                </div>
 
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#4b1d7a] border-t-transparent" />
-                <p className="text-xs font-semibold text-[#6d6178]">Loading station tribes…</p>
-              </div>
-            ) : filteredTribes.length === 0 ? (
-              <div className="py-20 text-center text-sm text-[#6d6178]">
-                No tribes found matching your search.
-              </div>
-            ) : (
-              <div className="divide-y divide-[#4b1d7a]/8">
-                {filteredTribes.map((tribe) => (
-                  <div
-                    key={tribe.id}
-                    onClick={() => setSelectedTribeId(tribe.id)}
-                    className="grid cursor-pointer grid-cols-[80px_1.2fr_1.2fr_auto_90px] items-center gap-3 px-6 py-3.5 hover:bg-[#4b1d7a]/5 transition-colors"
-                  >
-                    <span className="font-mono text-xs font-bold text-[#4b1d7a] bg-[#4b1d7a]/8 px-2 py-1 rounded-md w-fit">
-                      {tribe.tribeCode}
-                    </span>
-                    <div>
-                      <span className="block font-bold text-sm text-[#12071f]">{tribe.tribeName}</span>
-                      <span className="text-[11px] text-[#4b1d7a] font-semibold">
-                        {tribe.groupName ? `${tribe.groupName} · ${tribe.theme}` : tribe.theme}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm">📍</span>
-                        <span className="text-xs font-extrabold text-[#12071f]">
-                          {tribe.location || hostLocation || "Venue Hall"}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-[#6d6178] block">
-                        {tribe.theme || "Active Station"}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-base font-extrabold text-[#12071f] block">{tribe.totalScore} pts</span>
-                      <span className="text-[10px] text-[#6d6178]">
-                        {tribe.rank ? `Rank ${rankLabel(tribe.rank)}` : "Unranked"}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedTribeId(tribe.id);
-                        }}
-                        className="rounded-full border border-[#4b1d7a]/25 px-3 py-1 text-xs font-bold text-[#4b1d7a] hover:bg-[#4b1d7a] hover:text-white transition shadow-xs cursor-pointer"
-                      >
-                        Inspect
-                      </button>
-                    </div>
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-20 gap-3">
+                    <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#4b1d7a] border-t-transparent" />
+                    <p className="text-xs font-semibold text-[#6d6178]">Loading station tribes…</p>
                   </div>
-                ))}
+                ) : filteredTribes.length === 0 ? (
+                  <div className="py-20 text-center text-sm text-[#6d6178]">
+                    No tribes found matching your search.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-[#4b1d7a]/8">
+                    {filteredTribes.map((tribe) => (
+                      <div
+                        key={tribe.id}
+                        onClick={() => setSelectedTribeId(tribe.id)}
+                        className="grid cursor-pointer grid-cols-[80px_1.2fr_1.2fr_auto_90px] items-center gap-3 px-6 py-3.5 hover:bg-[#4b1d7a]/5 transition-colors"
+                      >
+                        <span className="font-mono text-xs font-bold text-[#4b1d7a] bg-[#4b1d7a]/8 px-2 py-1 rounded-md w-fit">
+                          {tribe.tribeCode}
+                        </span>
+                        <div>
+                          <span className="block font-bold text-sm text-[#12071f]">{tribe.tribeName}</span>
+                          <span className="text-[11px] text-[#4b1d7a] font-semibold">
+                            {tribe.groupName ? `${tribe.groupName} · ${tribe.theme}` : tribe.theme}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">📍</span>
+                            <span className="text-xs font-extrabold text-[#12071f]">
+                              {tribe.location || hostLocation || "Venue Hall"}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-[#6d6178] block">
+                            {tribe.theme || "Active Station"}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-base font-extrabold text-[#12071f] block">{tribe.totalScore} pts</span>
+                          <span className="text-[10px] text-[#6d6178]">
+                            {tribe.rank ? `Rank ${rankLabel(tribe.rank)}` : "Unranked"}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedTribeId(tribe.id);
+                            }}
+                            className="rounded-full border border-[#4b1d7a]/25 px-3 py-1 text-xs font-bold text-[#4b1d7a] hover:bg-[#4b1d7a] hover:text-white transition shadow-xs cursor-pointer"
+                          >
+                            Inspect
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         ) : (
           /* Grid Cards View */

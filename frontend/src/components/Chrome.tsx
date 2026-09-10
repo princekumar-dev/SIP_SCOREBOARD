@@ -27,23 +27,41 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#12071f]/85 text-[#f7f1e6] backdrop-blur-2xl saturate-[1.8] shadow-lg shadow-[#12071f]/20 transition-all">
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#e4b84a]/[0.04] to-transparent pointer-events-none" />
-      <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">
-        <Link href="/" className="flex items-center gap-3 group transition-transform duration-300 hover:scale-[1.02]">
-          <div className="relative">
+      <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 sm:px-5 py-2.5 sm:py-3">
+        <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group transition-transform duration-300 hover:scale-[1.01] min-w-0">
+          <div className="relative shrink-0">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#e4b84a]/30 to-[#4b1d7a]/30 blur-sm opacity-0 group-hover:opacity-100 transition duration-500" />
             <BrandLogo size="md" variant="badge" priority />
           </div>
-          <span>
-            <span className="display block text-lg font-bold tracking-tight text-white transition-colors group-hover:text-[#e4b84a]">
+          <span className="min-w-0">
+            <span className="display block text-base sm:text-lg font-bold tracking-tight text-white transition-colors group-hover:text-[#e4b84a] truncate">
               MSEC SIP Arena
             </span>
-            <span className="flex items-center gap-1.5 text-[10px] tracking-[0.25em] text-[#e4b84a]/80 font-semibold uppercase">
+            <span className="flex items-center gap-1.5 text-[9px] sm:text-[10px] tracking-[0.2em] sm:tracking-[0.25em] text-[#e4b84a]/80 font-semibold uppercase">
               <span>2026–27</span>
               <span className="inline-block h-1 w-1 rounded-full bg-[#e4b84a]" />
               <span className="text-[#35d07f] font-bold">Live</span>
             </span>
           </span>
         </Link>
+
+        {/* Mobile Quick Action Pill */}
+        <div className="flex md:hidden items-center gap-1.5 shrink-0">
+          <Link
+            href="/scoreboard"
+            target="_blank"
+            className="rounded-xl border border-white/10 bg-white/5 p-2 text-xs text-[#f7f1e6]/80 hover:bg-white/10 hover:text-white transition flex items-center"
+            title="Projector Scoreboard"
+          >
+            <span>📺</span>
+          </Link>
+          <Link
+            href="/login"
+            className="btn-gold !py-1.5 !px-3 !text-[11px] !font-bold shadow-sm"
+          >
+            Host →
+          </Link>
+        </div>
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-1.5 text-[13px] text-[#f7f1e6]/80 md:flex">
@@ -90,14 +108,14 @@ export function SiteFooter() {
   if (path.startsWith("/scoreboard") || path.startsWith("/admin") || path.startsWith("/login")) return null;
 
   return (
-    <footer className="mt-auto border-t border-[#4b1d7a]/15 bg-[#12071f] text-[#f7f1e6] relative overflow-hidden">
+    <footer className="mt-auto border-t border-[#4b1d7a]/15 bg-[#12071f] text-[#f7f1e6] relative overflow-hidden pb-8 md:pb-0">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#4b1d7a]/5 to-[#4b1d7a]/20 pointer-events-none" />
       
       {/* Group Accent Bar */}
-      <div className="border-b border-white/[0.06] bg-black/30 px-5 py-3">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 text-xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#e4b84a]/80">5 Active Houses & Themes:</span>
-          <div className="flex flex-wrap items-center gap-2">
+      <div className="border-b border-white/[0.06] bg-black/30 px-4 sm:px-5 py-3">
+        <div className="mx-auto flex max-w-6xl flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 text-xs">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#e4b84a]/80 shrink-0">5 Active Houses & Themes:</span>
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {GROUP_PILLS.map((grp) => (
               <span key={grp.name} className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border flex items-center gap-1 ${grp.color}`}>
                 <span>{grp.icon}</span>
@@ -108,12 +126,12 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div className="relative mx-auto flex max-w-6xl flex-col gap-6 px-5 py-10 md:flex-row md:items-center md:justify-between">
+      <div className="relative mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-5 py-8 sm:py-10 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3.5">
           <BrandLogo size="lg" variant="badge" />
           <div>
-            <p className="display text-xl font-bold text-white">MSEC SIP Arena</p>
-            <p className="mt-1 text-xs text-[#f7f1e6]/50 max-w-md">
+            <p className="display text-lg sm:text-xl font-bold text-white">MSEC SIP Arena</p>
+            <p className="mt-1 text-xs text-[#f7f1e6]/50 max-w-md leading-relaxed">
               Meenakshi Sundararajan Engineering College · Student Induction Program 2026–27
             </p>
           </div>
@@ -145,7 +163,7 @@ export function MobileNav() {
   ];
 
   return (
-    <nav className="fixed bottom-3 left-4 right-4 z-40 grid grid-cols-4 rounded-2xl border border-white/10 bg-[#12071f]/90 backdrop-blur-2xl saturate-[1.8] p-1.5 text-[10px] text-[#f7f1e6]/80 shadow-2xl shadow-black/50 md:hidden">
+    <nav className="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] left-3 right-3 sm:left-4 sm:right-4 z-40 grid grid-cols-4 max-w-lg mx-auto rounded-2xl border border-white/10 bg-[#12071f]/90 backdrop-blur-2xl saturate-[1.8] p-1.5 text-[10px] text-[#f7f1e6]/80 shadow-2xl shadow-black/50 md:hidden">
       {items.map((item) => {
         const isActive = path === item.href;
         return (

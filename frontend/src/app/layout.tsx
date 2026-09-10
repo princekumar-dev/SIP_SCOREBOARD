@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cinzel, Outfit } from "next/font/google";
 import "./globals.css";
 import { MobileNav, SiteFooter, SiteHeader } from "@/components/Chrome";
@@ -13,6 +13,14 @@ const body = Outfit({
   variable: "--font-body",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#12071f",
+};
 
 export const metadata: Metadata = {
   title: "MSEC SIP Arena",
@@ -33,7 +41,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" suppressHydrationWarning className={`${display.variable} ${body.variable} h-full`}>
-      <body className="min-h-full flex flex-col pb-16 md:pb-0 antialiased">
+      <body className="min-h-full flex flex-col pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-0 antialiased overflow-x-hidden">
         <SiteHeader />
         <main className="flex-1 animate-fade-in">{children}</main>
         <SiteFooter />

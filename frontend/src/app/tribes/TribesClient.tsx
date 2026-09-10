@@ -78,8 +78,8 @@ export function TribesClient({
       {/* Controls Header */}
       <div className="space-y-4">
         {/* Search & Filter Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#4b1d7a]/[0.1] bg-white/90 p-4 backdrop-blur-xl shadow-sm">
-          <div className="relative min-w-[260px] flex-1">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 rounded-2xl border border-[#4b1d7a]/[0.1] bg-white/90 p-3.5 sm:p-4 backdrop-blur-xl shadow-sm">
+          <div className="relative w-full flex-1">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#6d6178]">🔍</span>
             <input
               type="text"
@@ -99,20 +99,22 @@ export function TribesClient({
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="text-[#6d6178] font-semibold">Sort:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="rounded-lg border border-[#4b1d7a]/[0.12] bg-white px-3 py-1.5 font-medium text-[#4b1d7a] outline-none focus:border-[#e4b84a] transition-all cursor-pointer"
-            >
-              <option value="code">Tribe Code (SIP-001...)</option>
-              <option value="rank">Overall Rank (1st...)</option>
-              <option value="score">Highest Score</option>
-              <option value="name">Tribe Name (A-Z)</option>
-            </select>
+          <div className="flex items-center justify-between md:justify-start gap-2 text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#6d6178] font-semibold">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="rounded-lg border border-[#4b1d7a]/[0.12] bg-white px-2.5 sm:px-3 py-1.5 font-medium text-[#4b1d7a] outline-none focus:border-[#e4b84a] transition-all cursor-pointer"
+              >
+                <option value="code">Tribe Code (SIP-001...)</option>
+                <option value="rank">Overall Rank (1st...)</option>
+                <option value="score">Highest Score</option>
+                <option value="name">Tribe Name (A-Z)</option>
+              </select>
+            </div>
 
-            <div className="flex rounded-lg border border-[#4b1d7a]/[0.12] bg-white p-0.5 ml-1">
+            <div className="flex rounded-lg border border-[#4b1d7a]/[0.12] bg-white p-0.5 shrink-0">
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
@@ -136,11 +138,11 @@ export function TribesClient({
         </div>
 
         {/* Group Filter Pills */}
-        <div className="flex flex-wrap gap-2 pt-1">
+        <div className="flex overflow-x-auto no-scrollbar flex-nowrap sm:flex-wrap gap-2 pt-1 pb-1">
           <button
             type="button"
             onClick={() => setActiveGroup("all")}
-            className={`rounded-full px-4 py-2 text-xs font-bold transition-all duration-300 cursor-pointer ${
+            className={`rounded-full px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold transition-all duration-300 cursor-pointer shrink-0 ${
               activeGroup === "all"
                 ? "bg-[#12071f] text-[#e4b84a] shadow-md ring-2 ring-[#e4b84a]/30 scale-105"
                 : "bg-white text-[#12071f] border border-[#4b1d7a]/15 hover:border-[#4b1d7a]/30"
@@ -177,7 +179,7 @@ export function TribesClient({
                 key={g.groupName}
                 type="button"
                 onClick={() => setActiveGroup(g.groupName)}
-                className={`rounded-full px-4 py-2 text-xs font-bold transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
+                className={`rounded-full px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold transition-all duration-300 flex items-center gap-1.5 cursor-pointer shrink-0 ${
                   isActive ? activeClass : defaultPillClass
                 }`}
               >
@@ -297,46 +299,50 @@ export function TribesClient({
       ) : (
         /* Display: Table View */
         <div className="panel mt-5 overflow-hidden">
-          <div className="grid grid-cols-[80px_1fr_1fr_auto_90px] gap-3 border-b border-[#4b1d7a]/[0.08] bg-[#4b1d7a]/[0.04] px-5 py-3.5 text-[10px] uppercase tracking-[0.2em] text-[#6d6178] font-semibold">
-            <span>Code</span>
-            <span>Tribe Name</span>
-            <span>Venue Hall & Domain</span>
-            <span className="text-right">Score & Rank</span>
-            <span className="text-right">Action</span>
-          </div>
-          {filteredTribes.map((tribe) => (
-            <div
-              key={tribe.id}
-              onClick={() => setSelectedTribeId(tribe.id)}
-              className="grid cursor-pointer grid-cols-[80px_1fr_1fr_auto_90px] items-center gap-3 border-b border-[#4b1d7a]/[0.05] px-5 py-3.5 last:border-0 hover:bg-[#4b1d7a]/[0.03] transition-all"
-            >
-              <span className="font-mono text-xs font-bold text-[#4b1d7a]">{tribe.tribeCode}</span>
-              <div className="min-w-0">
-                <span className="block font-semibold text-[#160b24] truncate">{tribe.tribeName}</span>
-                <span className="text-[10px] text-[#6d6178]">{tribe.groupName || tribe.theme}</span>
+          <div className="overflow-x-auto">
+            <div className="min-w-[620px]">
+              <div className="grid grid-cols-[80px_1fr_1fr_auto_90px] gap-3 border-b border-[#4b1d7a]/[0.08] bg-[#4b1d7a]/[0.04] px-5 py-3.5 text-[10px] uppercase tracking-[0.2em] text-[#6d6178] font-semibold">
+                <span>Code</span>
+                <span>Tribe Name</span>
+                <span>Venue Hall & Domain</span>
+                <span className="text-right">Score & Rank</span>
+                <span className="text-right">Action</span>
               </div>
-              <div className="min-w-0">
-                <span className={`text-xs block truncate ${tribe.location ? "font-medium text-[#4b1d7a]" : "font-semibold text-amber-700"}`}>
-                  {tribe.location ? `📍 ${tribe.location}` : "⚠️ Not Allocated"}
-                </span>
-                <span className="text-[11px] text-[#6d6178] truncate block">{tribe.venueTheme || tribe.theme}</span>
-              </div>
-              <div className="text-right">
-                <span className="display text-lg font-bold text-[#4b1d7a] tabular-nums">{tribe.totalScore} pts</span>
-                <span className="block text-[10px] text-[#6d6178]">
-                  {tribe.rank ? `Rank ${rankLabel(tribe.rank)}` : "Unranked"}
-                </span>
-              </div>
-              <div className="text-right">
-                <button
-                  type="button"
-                  className="rounded-full border border-[#4b1d7a]/20 px-3 py-1 text-xs font-bold text-[#4b1d7a] hover:bg-[#4b1d7a] hover:text-white transition-all"
+              {filteredTribes.map((tribe) => (
+                <div
+                  key={tribe.id}
+                  onClick={() => setSelectedTribeId(tribe.id)}
+                  className="grid cursor-pointer grid-cols-[80px_1fr_1fr_auto_90px] items-center gap-3 border-b border-[#4b1d7a]/[0.05] px-5 py-3.5 last:border-0 hover:bg-[#4b1d7a]/[0.03] transition-all"
                 >
-                  View
-                </button>
-              </div>
+                  <span className="font-mono text-xs font-bold text-[#4b1d7a]">{tribe.tribeCode}</span>
+                  <div className="min-w-0">
+                    <span className="block font-semibold text-[#160b24] truncate">{tribe.tribeName}</span>
+                    <span className="text-[10px] text-[#6d6178]">{tribe.groupName || tribe.theme}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <span className={`text-xs block truncate ${tribe.location ? "font-medium text-[#4b1d7a]" : "font-semibold text-amber-700"}`}>
+                      {tribe.location ? `📍 ${tribe.location}` : "⚠️ Not Allocated"}
+                    </span>
+                    <span className="text-[11px] text-[#6d6178] truncate block">{tribe.venueTheme || tribe.theme}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="display text-lg font-bold text-[#4b1d7a] tabular-nums">{tribe.totalScore} pts</span>
+                    <span className="block text-[10px] text-[#6d6178]">
+                      {tribe.rank ? `Rank ${rankLabel(tribe.rank)}` : "Unranked"}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      className="rounded-full border border-[#4b1d7a]/20 px-3 py-1 text-xs font-bold text-[#4b1d7a] hover:bg-[#4b1d7a] hover:text-white transition-all"
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       )}
 

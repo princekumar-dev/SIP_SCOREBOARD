@@ -153,11 +153,11 @@ export default function AdminHome() {
     <AdminShell>
       <div className="space-y-8 max-w-6xl mx-auto">
         {/* Executive / Host Header Banner */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#12071f] via-[#240e3f] to-[#12071f] p-6 md:p-8 text-white shadow-xl border border-[#e4b84a]/20">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#12071f] via-[#240e3f] to-[#12071f] p-5 sm:p-6 md:p-8 text-white shadow-xl border border-[#e4b84a]/20">
           <div className="absolute right-0 top-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-[#e4b84a]/10 blur-3xl" />
           <div className="absolute left-1/3 bottom-0 -mb-8 h-36 w-36 rounded-full bg-[#4b1d7a]/30 blur-2xl" />
 
-          <div className="relative z-10 flex flex-wrap items-center justify-between gap-5">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="rounded-full bg-[#e4b84a]/20 border border-[#e4b84a]/40 px-3 py-0.5 text-[10px] font-mono uppercase tracking-widest text-[#e4b84a]">
@@ -168,7 +168,7 @@ export default function AdminHome() {
                   Live Station Active
                 </span>
               </div>
-              <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white">
+              <h1 className="text-xl sm:text-2xl md:text-4xl font-extrabold tracking-tight text-white">
                 {isSuperAdmin
                   ? "SIP Arena Master Portal"
                   : `${hostVenue?.location || "Venue"} Host Portal`}
@@ -181,17 +181,17 @@ export default function AdminHome() {
             </div>
 
             {/* Quick action buttons */}
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto">
               <Link
                 href="/admin/scores"
-                className="rounded-xl bg-gradient-to-r from-[#e4b84a] to-[#d4a332] px-4 py-2.5 text-xs font-extrabold text-[#12071f] shadow-lg shadow-[#e4b84a]/20 hover:brightness-105 active:scale-95 transition flex items-center gap-2"
+                className="flex-1 sm:flex-initial text-center justify-center rounded-xl bg-gradient-to-r from-[#e4b84a] to-[#d4a332] px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs font-extrabold text-[#12071f] shadow-lg shadow-[#e4b84a]/20 hover:brightness-105 active:scale-95 transition flex items-center gap-1.5 sm:gap-2"
               >
                 <span>📝</span>
                 <span>{isSuperAdmin ? "Score Matrix" : `Score ${hostVenue?.groupName || "Group"}`}</span>
               </Link>
               <Link
                 href="/admin/teams"
-                className="rounded-xl border border-white/20 bg-white/10 backdrop-blur-md px-4 py-2.5 text-xs font-bold text-white hover:bg-white/20 transition flex items-center gap-2"
+                className="flex-1 sm:flex-initial text-center justify-center rounded-xl border border-white/20 bg-white/10 backdrop-blur-md px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs font-bold text-white hover:bg-white/20 transition flex items-center gap-1.5 sm:gap-2"
               >
                 <span>🛡️</span>
                 <span>{isSuperAdmin ? "All Tribes" : "Station Tribes"}</span>
@@ -203,7 +203,7 @@ export default function AdminHome() {
                     : "/scoreboard"
                 }
                 target="_blank"
-                className="rounded-xl border border-white/20 bg-white/10 backdrop-blur-md px-4 py-2.5 text-xs font-bold text-[#e4b84a] hover:bg-white/20 transition flex items-center gap-2"
+                className="flex-1 sm:flex-initial text-center justify-center rounded-xl border border-white/20 bg-white/10 backdrop-blur-md px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs font-bold text-[#e4b84a] hover:bg-white/20 transition flex items-center gap-1.5 sm:gap-2"
               >
                 <span>📺</span>
                 <span>Projector</span>
@@ -213,7 +213,7 @@ export default function AdminHome() {
         </div>
 
         {/* Dynamic Stat Cards tailored to Host vs Admin */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {isVenueHost && hostVenue ? (
             <>
               {/* Host Stat 1: Assigned Tribes */}
