@@ -23,7 +23,12 @@ export function LiveLeaderboard({
 }) {
   const [rows, setRows] = useState(initialRows);
   const [updated, setUpdated] = useState(initialUpdated);
+  const [mounted, setMounted] = useState(false);
   const mountedRef = useRef(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const refresh = useCallback(async () => {
     try {
@@ -53,7 +58,9 @@ export function LiveLeaderboard({
       {title ? <h2 className="display text-3xl">{title}</h2> : null}
       <div className="flex flex-wrap items-center gap-4">
         <LiveBadge live={live} />
-        <span className="text-[11px] tracking-[0.14em] uppercase text-[#6d6178]">Updated {formatTime(updated)}</span>
+        <span suppressHydrationWarning className="text-[11px] tracking-[0.14em] uppercase text-[#6d6178]">
+          Updated {mounted ? formatTime(updated) : "—"}
+        </span>
         <Link href="/" className="ml-auto text-xs font-semibold text-[#4b1d7a] hover:text-[#e4b84a] transition-colors">
           Exit
         </Link>

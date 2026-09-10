@@ -610,7 +610,7 @@ export default function AdminHome() {
                         <p className="text-[10px] text-[#6d6178] italic mt-0.5">{item.reason}</p>
                       )}
                     </div>
-                    <span className="text-[10px] font-mono text-[#6d6178]">
+                    <span suppressHydrationWarning className="text-[10px] font-mono text-[#6d6178]">
                       {new Date(item.createdAt).toLocaleTimeString()}
                     </span>
                   </div>

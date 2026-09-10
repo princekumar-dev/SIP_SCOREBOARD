@@ -19,8 +19,14 @@ async function start() {
 
   const app = express();
   const server = http.createServer(app);
+
   const io = new Server(server, {
-    cors: { origin: clientOrigin, credentials: true },
+    cors: {
+      origin: (origin, callback) => callback(null, true),
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      credentials: true,
+    },
+    transports: ["polling", "websocket"],
   });
   attachIo(app, io);
 
@@ -28,7 +34,14 @@ async function start() {
     socket.emit("scores:updated", { kind: "hello", at: new Date().toISOString() });
   });
 
-  app.use(cors({ origin: clientOrigin, credentials: true }));
+  app.use(
+    cors({
+      origin: (origin, callback) => callback(null, true),
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    })
+  );
   app.use(express.json());
 
   app.get("/api/health", (_req, res) => res.json({ ok: true, service: "msec-sip-arena" }));

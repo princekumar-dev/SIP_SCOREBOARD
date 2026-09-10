@@ -59,7 +59,7 @@ export default function AuditPage() {
                     {log.reason ? ` · ${log.reason}` : ""}
                   </p>
                 </div>
-                <p className="text-xs text-[#6d6178] font-mono shrink-0">{new Date(log.createdAt).toLocaleString()}</p>
+                <p suppressHydrationWarning className="text-xs text-[#6d6178] font-mono shrink-0">{new Date(log.createdAt).toLocaleString()}</p>
               </div>
             ))}
           </div>

@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} h-full`}>
+    <html lang="en" suppressHydrationWarning className={`${display.variable} ${body.variable} h-full`}>
       <body className="min-h-full flex flex-col pb-16 md:pb-0 antialiased">
         <SiteHeader />
         <main className="flex-1 animate-fade-in">{children}</main>

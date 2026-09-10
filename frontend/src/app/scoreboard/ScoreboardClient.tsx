@@ -43,6 +43,11 @@ export function ScoreboardClient({
   const [index, setIndex] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
   const [hasToken, setHasToken] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (requestedParam) {
@@ -196,8 +201,8 @@ export function ScoreboardClient({
           <div className="flex flex-wrap items-center gap-3 md:self-center">
             <div className="flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-2 backdrop-blur-md">
               <LiveBadge live={live} />
-              <span className="text-[11px] font-mono text-white/60">
-                {formatTime(updated)}
+              <span suppressHydrationWarning className="text-[11px] font-mono text-white/60">
+                {mounted ? formatTime(updated) : "—"}
               </span>
             </div>
 

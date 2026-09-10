@@ -11,8 +11,8 @@ export function useLiveRefresh(onUpdate: () => void) {
 
   useEffect(() => {
     const socket = io(SOCKET_URL, {
-      transports: ["websocket"],
-      reconnectionDelay: 5000,
+      transports: ["polling", "websocket"],
+      reconnectionDelay: 3000,
       reconnectionAttempts: 10,
     });
 
