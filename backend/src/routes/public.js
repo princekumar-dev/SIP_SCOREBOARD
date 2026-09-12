@@ -217,23 +217,38 @@ router.get("/tribes", async (req, res) => {
     filter.venueId = venueId;
   }
 
-  const tribes = await Tribe.find(filter).populate("venueId").sort({ tribeCode: 1 }).lean();
+  const [tribes, allVenues] = await Promise.all([
+    Tribe.find(filter).sort({ tribeCode: 1 }).lean(),
+    Venue.find().lean(),
+  ]);
+
+  const groupToVenueMap = new Map();
+  for (const v of allVenues) {
+    if (v.groupName) {
+      groupToVenueMap.set(v.groupName.toLowerCase(), v);
+    }
+  }
+
   const overall = await buildLeaderboard();
   const rankMap = Object.fromEntries(overall.map((row) => [row.id, row]));
 
-  let results = tribes.map((tribe) => ({
-    id: String(tribe._id),
-    tribeCode: tribe.tribeCode,
-    tribeName: tribe.tribeName,
-    theme: tribe.theme,
-    groupName: tribe.groupName,
-    venueId: tribe.venueId?._id ? String(tribe.venueId._id) : "",
-    venueTheme: tribe.venueId?.theme || tribe.theme,
-    location: tribe.venueId?.location || "",
-    motif: tribe.venueId?.motif || "creative",
-    rank: rankMap[String(tribe._id)]?.rank || null,
-    totalScore: rankMap[String(tribe._id)]?.totalScore || 0,
-  }));
+  let results = tribes.map((tribe) => {
+    const assignedVenue = tribe.groupName ? groupToVenueMap.get(tribe.groupName.toLowerCase()) : null;
+    const gInfo = tribe.groupName ? GROUP_MAP[tribe.groupName] : null;
+    return {
+      id: String(tribe._id),
+      tribeCode: tribe.tribeCode,
+      tribeName: tribe.tribeName,
+      theme: tribe.theme || gInfo?.theme || "",
+      groupName: tribe.groupName,
+      venueId: assignedVenue ? String(assignedVenue._id) : "",
+      venueTheme: assignedVenue?.theme || tribe.theme || gInfo?.theme || "",
+      location: assignedVenue ? assignedVenue.location : "No Venue Allocated",
+      motif: assignedVenue?.motif || gInfo?.motif || "creative",
+      rank: rankMap[String(tribe._id)]?.rank || null,
+      totalScore: rankMap[String(tribe._id)]?.totalScore || 0,
+    };
+  });
 
   if (q) {
     const needle = q.toLowerCase();
@@ -266,38 +281,40 @@ router.get("/tribes/:id", async (req, res) => {
   }
   if (!tribe) return res.status(404).json({ error: "Tribe not found." });
 
-  const [members, events, scores, overall] = await Promise.all([
+  const [members, events, scores, overall, assignedVenue] = await Promise.all([
     Member.find({ tribeId: tribe._id }).sort({ name: 1 }).lean(),
     Event.find().sort({ createdAt: 1 }).lean(),
     Score.find({ tribeId: tribe._id }).lean(),
     buildLeaderboard(),
+    tribe.groupName ? Venue.findOne({ groupName: tribe.groupName }).lean() : null,
   ]);
   const scoreMap = Object.fromEntries(scores.map((s) => [String(s.eventId), s]));
   const standing = overall.find((row) => row.id === String(tribe._id));
   const groupBoard = tribe.groupName ? await buildLeaderboard({ groupName: tribe.groupName }) : [];
   const groupStanding = groupBoard.find((row) => row.id === String(tribe._id));
+  const gInfo = tribe.groupName ? GROUP_MAP[tribe.groupName] : null;
 
   res.json({
     id: String(tribe._id),
     tribeCode: tribe.tribeCode,
     tribeName: tribe.tribeName,
     groupName: tribe.groupName,
-    theme: tribe.theme,
+    theme: tribe.theme || gInfo?.theme || "",
     status: tribe.status,
-    venue: tribe.venueId
+    venue: assignedVenue
       ? {
-          id: String(tribe.venueId._id || tribe.venueId),
-          theme: tribe.venueId.theme || tribe.theme,
-          location: tribe.venueId.location || "No Venue Allocated",
-          venueName: tribe.venueId.venueName || "Unallocated",
-          motif: tribe.venueId.motif || "creative",
+          id: String(assignedVenue._id),
+          theme: assignedVenue.theme || gInfo?.theme || tribe.theme,
+          location: assignedVenue.location || "No Venue Allocated",
+          venueName: assignedVenue.venueName || "Unallocated",
+          motif: assignedVenue.motif || gInfo?.motif || "creative",
         }
       : {
           id: "",
-          theme: tribe.theme || "Unallocated",
+          theme: tribe.theme || gInfo?.theme || "Unallocated",
           location: "No Venue Allocated",
           venueName: "Unallocated",
-          motif: "creative",
+          motif: gInfo?.motif || "neutral",
         },
     overallRank: standing?.rank || null,
     groupRank: groupStanding?.rank || null,

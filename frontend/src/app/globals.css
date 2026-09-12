@@ -83,6 +83,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Subtle noise texture overlay for premium tactile feel */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.018;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}
+
 @media (min-width: 768px) {
   body {
     background-attachment: fixed;
@@ -115,74 +128,97 @@ a { color: inherit; text-decoration: none; }
 
 /* ─── Panel / card ─── */
 .panel {
-  background: rgba(255, 252, 247, 0.95);
-  border: 1px solid rgba(75, 29, 122, 0.09);
+  background: rgba(255, 252, 247, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow:
-    0 1px 3px rgba(18, 7, 31, 0.03),
-    0 8px 32px rgba(18, 7, 31, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    0 1px 2px rgba(18, 7, 31, 0.02),
+    0 4px 16px rgba(18, 7, 31, 0.04),
+    0 16px 48px rgba(75, 29, 122, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(75, 29, 122, 0.04);
   border-radius: 24px;
   isolation: isolate;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.45s ease;
+              border-color 0.45s ease,
+              background 0.45s ease;
 }
 .panel:hover {
-  transform: translateY(-4px) scale(1.006);
+  transform: translateY(-6px) scale(1.008);
+  background: rgba(255, 252, 247, 0.82);
   box-shadow:
-    0 6px 16px rgba(18, 7, 31, 0.05),
-    0 24px 60px rgba(18, 7, 31, 0.12),
-    0 0 0 1px rgba(228, 184, 74, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  border-color: rgba(228, 184, 74, 0.3);
+    0 4px 12px rgba(18, 7, 31, 0.04),
+    0 16px 40px rgba(75, 29, 122, 0.08),
+    0 32px 64px rgba(228, 184, 74, 0.06),
+    0 0 0 1px rgba(228, 184, 74, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(75, 29, 122, 0.03);
+  border-color: rgba(228, 184, 74, 0.25);
 }
 
 /* ─── Group Themed Card Classes ─── */
 .group-card-1 {
-  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,241,242,0.9) 100%);
-  border-color: rgba(244, 63, 94, 0.2);
+  background: linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,241,242,0.65) 100%);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  border-color: rgba(244, 63, 94, 0.18);
 }
 .group-card-1:hover {
-  border-color: rgba(244, 63, 94, 0.5);
-  box-shadow: 0 12px 36px rgba(244, 63, 94, 0.16), 0 0 0 1px rgba(244, 63, 94, 0.3);
+  border-color: rgba(244, 63, 94, 0.45);
+  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,241,242,0.8) 100%);
+  box-shadow: 0 8px 32px rgba(244, 63, 94, 0.12), 0 0 0 1px rgba(244, 63, 94, 0.2), inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
 .group-card-2 {
-  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(236,254,255,0.9) 100%);
-  border-color: rgba(6, 182, 212, 0.2);
+  background: linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(236,254,255,0.65) 100%);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  border-color: rgba(6, 182, 212, 0.18);
 }
 .group-card-2:hover {
-  border-color: rgba(6, 182, 212, 0.5);
-  box-shadow: 0 12px 36px rgba(6, 182, 212, 0.16), 0 0 0 1px rgba(6, 182, 212, 0.3);
+  border-color: rgba(6, 182, 212, 0.45);
+  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(236,254,255,0.8) 100%);
+  box-shadow: 0 8px 32px rgba(6, 182, 212, 0.12), 0 0 0 1px rgba(6, 182, 212, 0.2), inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
 .group-card-3 {
-  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(250,245,255,0.9) 100%);
-  border-color: rgba(168, 85, 247, 0.2);
+  background: linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(250,245,255,0.65) 100%);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  border-color: rgba(168, 85, 247, 0.18);
 }
 .group-card-3:hover {
-  border-color: rgba(168, 85, 247, 0.5);
-  box-shadow: 0 12px 36px rgba(168, 85, 247, 0.16), 0 0 0 1px rgba(168, 85, 247, 0.3);
+  border-color: rgba(168, 85, 247, 0.45);
+  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(250,245,255,0.8) 100%);
+  box-shadow: 0 8px 32px rgba(168, 85, 247, 0.12), 0 0 0 1px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
 .group-card-4 {
-  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(254,252,232,0.9) 100%);
-  border-color: rgba(234, 179, 8, 0.25);
+  background: linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(254,252,232,0.65) 100%);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  border-color: rgba(234, 179, 8, 0.22);
 }
 .group-card-4:hover {
-  border-color: rgba(234, 179, 8, 0.55);
-  box-shadow: 0 12px 36px rgba(234, 179, 8, 0.16), 0 0 0 1px rgba(234, 179, 8, 0.3);
+  border-color: rgba(234, 179, 8, 0.5);
+  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(254,252,232,0.8) 100%);
+  box-shadow: 0 8px 32px rgba(234, 179, 8, 0.12), 0 0 0 1px rgba(234, 179, 8, 0.2), inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
 .group-card-5 {
-  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,247,237,0.9) 100%);
-  border-color: rgba(249, 115, 22, 0.2);
+  background: linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,247,237,0.65) 100%);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  border-color: rgba(249, 115, 22, 0.18);
 }
 .group-card-5:hover {
-  border-color: rgba(249, 115, 22, 0.5);
-  box-shadow: 0 12px 36px rgba(249, 115, 22, 0.16), 0 0 0 1px rgba(249, 115, 22, 0.3);
+  border-color: rgba(249, 115, 22, 0.45);
+  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,247,237,0.8) 100%);
+  box-shadow: 0 8px 32px rgba(249, 115, 22, 0.12), 0 0 0 1px rgba(249, 115, 22, 0.2), inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
 /* ─── Motifs ─── */
@@ -195,10 +231,11 @@ a { color: inherit; text-decoration: none; }
 /* ─── Scoreboard bg ─── */
 .scoreboard-bg {
   background:
-    radial-gradient(900px 500px at 85% 0%, rgba(228,184,74,.18), transparent 50%),
-    radial-gradient(800px 600px at 0% 100%, rgba(75,29,122,.55), transparent 45%),
-    radial-gradient(400px 300px at 50% 50%, rgba(75,29,122,.2), transparent 60%),
-    #090310;
+    radial-gradient(600px 400px at 80% 10%, rgba(228,184,74,.2), transparent 50%),
+    radial-gradient(500px 400px at 20% 80%, rgba(75,29,122,.45), transparent 50%),
+    radial-gradient(300px 250px at 60% 40%, rgba(168,85,247,.12), transparent 60%),
+    radial-gradient(200px 200px at 30% 20%, rgba(228,184,74,.08), transparent 50%),
+    linear-gradient(180deg, #090310 0%, #0d0518 40%, #12071f 100%);
 }
 
 /* ═══════════════════════════════════════════════
@@ -581,10 +618,13 @@ a { color: inherit; text-decoration: none; }
 
 /* Glass morphism panel */
 .glass {
-  background: rgba(255, 252, 247, 0.7);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 252, 247, 0.55);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 4px 16px rgba(75, 29, 122, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 /* Premium gradient text */
@@ -693,26 +733,33 @@ a { color: inherit; text-decoration: none; }
 
 /* Glass premium card */
 .glass-card {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 8px 32px 0 rgba(75, 29, 122, 0.06), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    0 4px 16px rgba(75, 29, 122, 0.04),
+    0 16px 48px rgba(75, 29, 122, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(75, 29, 122, 0.03);
 }
 
 /* Glass pill buttons */
 .glass-pill {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(75, 29, 122, 0.12);
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(75, 29, 122, 0.1);
+  box-shadow:
+    0 2px 8px rgba(75, 29, 122, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .glass-pill:hover {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(228, 184, 74, 0.4);
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(228, 184, 74, 0.35);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(75, 29, 122, 0.08);
+  box-shadow: 0 6px 20px rgba(75, 29, 122, 0.06), 0 0 0 1px rgba(228, 184, 74, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 /* Group Identity Pills */

@@ -26,7 +26,18 @@ async function buildLeaderboard({ venueId, groupName } = {}) {
     tribeFilter.venueId = venueId;
   }
 
-  const tribes = await Tribe.find(tribeFilter).populate("venueId").sort({ tribeCode: 1 }).lean();
+  const [tribes, allVenues] = await Promise.all([
+    Tribe.find(tribeFilter).sort({ tribeCode: 1 }).lean(),
+    Venue.find().lean(),
+  ]);
+
+  const groupToVenueMap = new Map();
+  for (const v of allVenues) {
+    if (v.groupName) {
+      groupToVenueMap.set(v.groupName.toLowerCase(), v);
+    }
+  }
+
   const tribeIds = tribes.map((t) => t._id);
   const scores = await Score.find({ tribeId: { $in: tribeIds } }).lean();
 
@@ -40,18 +51,19 @@ async function buildLeaderboard({ venueId, groupName } = {}) {
 
   const rows = tribes.map((tribe) => {
     const gInfo = tribe.groupName ? GROUP_MAP[tribe.groupName] : null;
-    const themeName = tribe.theme || gInfo?.theme || tribe.venueId?.theme || "";
+    const assignedVenue = tribe.groupName ? groupToVenueMap.get(tribe.groupName.toLowerCase()) : null;
+    const themeName = tribe.theme || gInfo?.theme || assignedVenue?.theme || "";
     return {
       id: String(tribe._id),
       tribeCode: tribe.tribeCode,
       tribeName: tribe.tribeName,
       groupName: tribe.groupName || "",
       theme: themeName,
-      venueId: tribe.venueId?._id ? String(tribe.venueId._id) : (tribe.venueId ? String(tribe.venueId) : ""),
-      venueName: tribe.venueId?.venueName || "Unallocated",
-      venueTheme: tribe.venueId?.theme || themeName,
-      location: tribe.venueId?.location || "No Venue Allocated",
-      motif: tribe.venueId?.motif || gInfo?.motif || "creative",
+      venueId: assignedVenue ? String(assignedVenue._id) : "",
+      venueName: assignedVenue ? assignedVenue.venueName : "Unallocated",
+      venueTheme: assignedVenue?.theme || themeName,
+      location: assignedVenue ? assignedVenue.location : "No Venue Allocated",
+      motif: assignedVenue?.motif || gInfo?.motif || "creative",
       totalScore: totals.get(String(tribe._id)) || 0,
     };
   });
