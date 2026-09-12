@@ -36,35 +36,35 @@ const GROUPS_CONFIG = [
     groupName: "Group I",
     sheetName: "GROUP 1",
     theme: "Creative & Design",
-    venueBanner: "GROUP 1: KRS SEMINAR HALL",
+    groupBanner: "GROUP 1: CREATIVE & DESIGN",
     classesBanner: "CLASSES: AI & DS – A   CSE – A   Civil",
   },
   {
     groupName: "Group II",
     sheetName: "GROUP 2",
     theme: "Technology & Innovation",
-    venueBanner: "GROUP 2: ECE SEMINAR HALL",
+    groupBanner: "GROUP 2: TECHNOLOGY & INNOVATION",
     classesBanner: "CLASSES: CYBER SECURITY   AI&DS B   IT A",
   },
   {
     groupName: "Group III",
     sheetName: "GROUP 3",
     theme: "Space & Cosmic",
-    venueBanner: "GROUP 3: CIVIL SEMINAR HALL",
+    groupBanner: "GROUP 3: SPACE & COSMIC",
     classesBanner: "CLASSES: AI & ML   IT – C   EEE",
   },
   {
     groupName: "Group IV",
     sheetName: "GROUP 4",
     theme: "Legends & Mythology",
-    venueBanner: "GROUP 4: MCW SEMINAR HALL",
+    groupBanner: "GROUP 4: LEGENDS & MYTHOLOGY",
     classesBanner: "CLASSES: ECE – A   CSE – B   MECH",
   },
   {
     groupName: "Group V",
     sheetName: "GROUP 5",
     theme: "Power & Energy",
-    venueBanner: "GROUP 5: MS AUDITORIUM",
+    groupBanner: "GROUP 5: POWER & ENERGY",
     classesBanner: "CLASSES: ECE – B   CSE – C   IT – B",
   },
 ];
@@ -158,7 +158,7 @@ function buildGroupSheet(
   titleRow2[0] = "TRIBE FORMATION & EVALUATION SCORECARD";
 
   const titleRow3 = new Array(totalCols).fill("");
-  titleRow3[0] = `${gConfig.venueBanner}  ·  (${gConfig.theme})`;
+  titleRow3[0] = gConfig.groupBanner;
 
   const titleRow4 = new Array(totalCols).fill("");
   titleRow4[0] = gConfig.classesBanner;
@@ -320,7 +320,7 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
   title2[0] = "OVERALL ARENA LEADERBOARD & STANDINGS";
 
   const title3 = new Array(overallHeaders.length).fill("");
-  title3[0] = "5 Groups · 5 Live Venue Halls · 90 Tribes";
+  title3[0] = "5 Groups · 90 Tribes";
 
   const spacer = new Array(overallHeaders.length).fill("");
 
@@ -437,7 +437,7 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
   applySheetStyles(wsOverall, 4, overallHeaders.length, data.events.length, false);
   XLSX.utils.book_append_sheet(wb, wsOverall, "OVERALL STANDINGS");
 
-  // 2. Individual Venue Sheets (VENUE 1 to VENUE 5)
+  // 2. Individual Group Sheets (GROUP 1 to GROUP 5)
   GROUPS_CONFIG.forEach((g) => {
     const groupTribes = data.tribes.filter((t) => t.groupName.toLowerCase() === g.groupName.toLowerCase());
     const ws = buildGroupSheet(g, groupTribes, data.events, false);
@@ -459,7 +459,7 @@ export function downloadOfflineScoreTemplate(data: MasterExportData, filterGroup
       groupName: filterGroup,
       sheetName: filterGroup,
       theme: "Theme",
-      venueBanner: `VENUE: ${filterGroup}`,
+      groupBanner: `GROUP: ${filterGroup.toUpperCase()}`,
       classesBanner: "CLASSES: ALL",
     };
     const groupTribes = data.tribes.filter((t) => t.groupName.toLowerCase() === filterGroup.toLowerCase());
@@ -475,12 +475,12 @@ export function downloadOfflineScoreTemplate(data: MasterExportData, filterGroup
     });
 
     const dateStr = new Date().toISOString().split("T")[0];
-    XLSX.writeFile(wb, `SIP_Arena_Offline_Score_Template_All_Venues_${dateStr}.xlsx`);
+    XLSX.writeFile(wb, `SIP_Arena_Offline_Score_Template_All_Groups_${dateStr}.xlsx`);
   }
 }
 
 /**
- * 3. Tribe & Members Directory (.xlsx with Venue Tabs)
+ * 3. Tribe & Members Directory (.xlsx with Group Tabs)
  */
 export function downloadMembersDirectoryExcel(data: MasterExportData) {
   const wb = XLSX.utils.book_new();
@@ -506,7 +506,7 @@ export function downloadMembersDirectoryExcel(data: MasterExportData) {
     title2[0] = "TRIBE FORMATION — STUDENT MEMBER ROSTER";
 
     const title3 = new Array(headers.length).fill("");
-    title3[0] = g.venueBanner;
+    title3[0] = g.groupBanner;
 
     const title4 = new Array(headers.length).fill("");
     title4[0] = g.classesBanner;
@@ -596,5 +596,5 @@ export function downloadMembersDirectoryExcel(data: MasterExportData) {
   });
 
   const dateStr = new Date().toISOString().split("T")[0];
-  XLSX.writeFile(wb, `MSEC_SIP_Tribes_Members_MultiVenue_${dateStr}.xlsx`);
+  XLSX.writeFile(wb, `MSEC_SIP_Tribes_Members_MultiGroup_${dateStr}.xlsx`);
 }
