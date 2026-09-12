@@ -18,8 +18,35 @@ const GROUP_THEMES: Record<string, string> = {
   "Group V": "Power & Energy",
 };
 
+const GROUPS_META = [
+  { id: "all", label: "Overall", icon: "🏆" },
+  { id: "Group I", label: "Group I · Creative & Design", icon: "🎨" },
+  { id: "Group II", label: "Group II · Technology & Innovation", icon: "💻" },
+  { id: "Group III", label: "Group III · Space & Cosmic", icon: "🚀" },
+  { id: "Group IV", label: "Group IV · Legends & Mythology", icon: "🛡️" },
+  { id: "Group V", label: "Group V · Power & Energy", icon: "⚡" },
+];
+
+function assignGroupRanks(tribes: LeaderboardRow[]) {
+  const sorted = [...tribes].sort(
+    (a, b) => b.totalScore - a.totalScore || a.tribeCode.localeCompare(b.tribeCode)
+  );
+  let currentRank = 0;
+  let prevScore: number | null = null;
+  return sorted.map((row, index) => {
+    if (row.totalScore === 0 || row.totalScore === null) {
+      return { ...row, rank: 0 };
+    }
+    if (row.totalScore !== prevScore) {
+      currentRank = index + 1;
+      prevScore = row.totalScore;
+    }
+    return { ...row, rank: currentRank };
+  });
+}
+
 export function ScoreboardClient({
-  venues,
+  venues: initialVenues,
   initial,
 }: {
   venues: Venue[];
@@ -36,10 +63,10 @@ export function ScoreboardClient({
   const cleanVenue = venueParam && venueParam.trim() !== "" ? venueParam.trim() : null;
   const requestedParam = cleanGroup || cleanVenue || "all";
 
-  const [selectedIdentifier, setSelectedIdentifier] = useState(requestedParam);
-  const [rows, setRows] = useState(initial.rows);
-  const [updated, setUpdated] = useState(initial.lastUpdated);
-  const [currentVenueInfo, setCurrentVenueInfo] = useState<any>(initial.venue || null);
+  const [selectedGroup, setSelectedGroup] = useState(requestedParam);
+  const [allTribes, setAllTribes] = useState<LeaderboardRow[]>(initial.rows || []);
+  const [venues, setVenues] = useState<Venue[]>(initialVenues || []);
+  const [updated, setUpdated] = useState(initial.lastUpdated || new Date().toISOString());
   const [index, setIndex] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
   const [hasToken, setHasToken] = useState(false);
@@ -51,7 +78,7 @@ export function ScoreboardClient({
 
   useEffect(() => {
     if (requestedParam) {
-      setSelectedIdentifier(requestedParam);
+      setSelectedGroup(requestedParam);
     }
   }, [requestedParam]);
 
@@ -63,9 +90,9 @@ export function ScoreboardClient({
         apiSend<any>("/api/admin/me", token, "GET")
           .then((me) => {
             if (me.role !== "super_admin") {
-              const defaultTarget = me.venue?.groupName || me.venueId;
+              const defaultTarget = me.venue?.groupName;
               if (defaultTarget) {
-                setSelectedIdentifier(defaultTarget);
+                setSelectedGroup(defaultTarget);
               }
             }
           })
@@ -74,132 +101,143 @@ export function ScoreboardClient({
     }
   }, [requestedParam]);
 
-  const venue = useMemo(() => {
-    if (!selectedIdentifier || selectedIdentifier === "all") return null;
-    return (
-      venues.find(
-        (item) =>
-          item.id === selectedIdentifier ||
-          item.id === cleanVenue ||
-          item.groupName?.toLowerCase() === selectedIdentifier.toLowerCase() ||
-          item.location?.toLowerCase().includes(selectedIdentifier.toLowerCase()) ||
-          item.theme?.toLowerCase().includes(selectedIdentifier.toLowerCase())
-      ) || currentVenueInfo
-    );
-  }, [venues, selectedIdentifier, cleanVenue, currentVenueInfo]);
-
-  const path = selectedIdentifier === "all" ? "/api/leaderboard" : `/api/leaderboard/venue/${encodeURIComponent(selectedIdentifier)}`;
-
+  // Refresh latest overall scores & venue mappings in real time
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch(`${SOCKET_URL}${path}`, { cache: "no-store" });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.rows) {
-        setRows(data.rows);
+      const [resBoard, resVenues] = await Promise.all([
+        fetch(`${SOCKET_URL}/api/leaderboard`, { cache: "no-store" }),
+        fetch(`${SOCKET_URL}/api/venues`, { cache: "no-store" }),
+      ]);
+      if (resBoard.ok) {
+        const data = await resBoard.json();
+        if (data.rows && Array.isArray(data.rows)) {
+          setAllTribes(data.rows);
+        }
+        setUpdated(data.lastUpdated || new Date().toISOString());
       }
-      if (data.venue) {
-        setCurrentVenueInfo(data.venue);
-      } else if (selectedIdentifier === "all") {
-        setCurrentVenueInfo(null);
+      if (resVenues.ok) {
+        const dataV = await resVenues.json();
+        if (Array.isArray(dataV)) {
+          setVenues(dataV);
+        }
       }
-      setUpdated(data.lastUpdated || new Date().toISOString());
     } catch {
       // ignore
     }
-  }, [path, selectedIdentifier]);
+  }, []);
 
   useEffect(() => {
     refresh();
-    setIndex(0);
   }, [refresh]);
 
   const live = useLiveRefresh(refresh);
 
-  const isHostSpecific = selectedIdentifier !== "all";
+  // Active venue assigned to selected group
+  const activeVenue = useMemo(() => {
+    if (selectedGroup === "all") return null;
+    return (
+      venues.find(
+        (v) =>
+          v.groupName?.toLowerCase() === selectedGroup.toLowerCase() ||
+          v.id === selectedGroup ||
+          v.venueName?.toLowerCase() === selectedGroup.toLowerCase()
+      ) || null
+    );
+  }, [venues, selectedGroup]);
 
-  const filteredRows = useMemo(() => {
-    if (!isHostSpecific) return rows;
-    if (rows.length <= 20) return rows;
-    const matched = rows.filter((r) => {
-      if (venue) {
-        if (r.venueId === venue.id) return true;
-        if (venue.groupName && r.groupName?.toLowerCase() === venue.groupName.toLowerCase()) return true;
-        if (venue.location && r.location?.toLowerCase().includes(venue.location.toLowerCase())) return true;
-      }
-      if (r.groupName?.toLowerCase() === selectedIdentifier.toLowerCase()) return true;
-      if (r.venueId === selectedIdentifier) return true;
-      if (r.location?.toLowerCase().includes(selectedIdentifier.toLowerCase())) return true;
+  // Filter and rank tribes for selected view instantly
+  const currentRows = useMemo(() => {
+    if (selectedGroup === "all") {
+      return allTribes;
+    }
+    const matching = allTribes.filter((t) => {
+      if (t.groupName && t.groupName.toLowerCase() === selectedGroup.toLowerCase()) return true;
+      if (activeVenue && t.venueId === activeVenue.id) return true;
       return false;
     });
-    return matched;
-  }, [rows, isHostSpecific, selectedIdentifier, venue]);
+    return assignGroupRanks(matching);
+  }, [allTribes, selectedGroup, activeVenue]);
 
+  const isHostSpecific = selectedGroup !== "all";
+
+  // Auto-scroll animation only on overall if > 10 tribes
   useEffect(() => {
-    if (isHostSpecific || filteredRows.length <= 10) return;
+    if (isHostSpecific || currentRows.length <= 10) return;
     const timer = setInterval(() => {
       setTransitioning(true);
       setTimeout(() => {
-        setIndex((i) => (i + 8) % filteredRows.length);
+        setIndex((i) => (i + 8) % currentRows.length);
         setTransitioning(false);
       }, 400);
     }, 8000);
     return () => clearInterval(timer);
-  }, [filteredRows.length, isHostSpecific]);
+  }, [currentRows.length, isHostSpecific]);
 
   const visible = useMemo(() => {
-    if (isHostSpecific || filteredRows.length <= 10) return filteredRows;
-    return Array.from({ length: 8 }, (_, i) => filteredRows[(index + i) % filteredRows.length]);
-  }, [filteredRows, index, isHostSpecific]);
+    if (isHostSpecific || currentRows.length <= 10) return currentRows;
+    return Array.from({ length: 8 }, (_, i) => currentRows[(index + i) % currentRows.length]);
+  }, [currentRows, index, isHostSpecific]);
 
-  // Build group list dynamically with guaranteed unique keys
+  // Group switcher buttons list
   const groupsList = useMemo(() => {
-    const all = { id: "all", label: `Overall (${rows.length || 91} Tribes)`, icon: "🏆", location: undefined as string | undefined };
-    const groupButtons = [
-      { id: "Group I", label: "Group I · Creative & Design", icon: "🎨" },
-      { id: "Group II", label: "Group II · Technology & Innovation", icon: "💻" },
-      { id: "Group III", label: "Group III · Space & Cosmic", icon: "🚀" },
-      { id: "Group IV", label: "Group IV · Legends & Mythology", icon: "🛡️" },
-      { id: "Group V", label: "Group V · Power & Energy", icon: "⚡" },
-    ].map((g) => {
-      const assignedVenue = venues.find(
+    return GROUPS_META.map((g) => {
+      if (g.id === "all") {
+        return {
+          id: "all",
+          label: `Overall (${allTribes.length || 91} Tribes)`,
+          icon: "🏆",
+          location: undefined,
+        };
+      }
+      const assigned = venues.find(
         (v) => v.groupName && v.groupName.toLowerCase() === g.id.toLowerCase()
       );
+      const tribeCount = allTribes.filter(
+        (t) => t.groupName?.toLowerCase() === g.id.toLowerCase()
+      ).length;
       return {
         id: g.id,
-        label: g.label,
+        label: `${g.label}${tribeCount ? ` (${tribeCount})` : ""}`,
         icon: g.icon,
-        location: assignedVenue?.location,
+        location: assigned?.location,
       };
     });
-    return [all, ...groupButtons];
-  }, [venues, rows.length]);
+  }, [venues, allTribes]);
 
-  // Active Title & Badge Computation
-  const activeGroupTitle = useMemo(() => {
-    if (selectedIdentifier === "all") {
+  // Active Title, Subtitle, and Badge
+  const activeTitle = useMemo(() => {
+    if (selectedGroup === "all") {
       return "Overall SIP Grand Leaderboard";
     }
-    const matchedGroupName = venue?.groupName || (selectedIdentifier.startsWith("Group") ? selectedIdentifier : null);
-    if (matchedGroupName && GROUP_THEMES[matchedGroupName]) {
-      return `${matchedGroupName}: ${GROUP_THEMES[matchedGroupName]}`;
+    if (GROUP_THEMES[selectedGroup]) {
+      return `${selectedGroup}: ${GROUP_THEMES[selectedGroup]}`;
     }
-    if (venue?.theme && venue.theme !== "Pending Group Selection") {
-      return venue.groupName ? `${venue.groupName}: ${venue.theme}` : venue.theme;
+    if (activeVenue?.theme && activeVenue.theme !== "Pending Group Selection") {
+      return activeVenue.groupName ? `${activeVenue.groupName}: ${activeVenue.theme}` : activeVenue.theme;
     }
-    return `${selectedIdentifier} Standings`;
-  }, [selectedIdentifier, venue]);
+    return `${selectedGroup} Standings`;
+  }, [selectedGroup, activeVenue]);
+
+  const activeBadge = useMemo(() => {
+    if (selectedGroup === "all") {
+      return "Projector Grand Scoreboard";
+    }
+    if (activeVenue?.location && activeVenue.location !== "No Venue Allocated") {
+      return `📍 Station Projector · ${activeVenue.location}`;
+    }
+    return `📍 Station Projector · ${selectedGroup}`;
+  }, [selectedGroup, activeVenue]);
 
   const activeSubtitle = useMemo(() => {
-    if (!isHostSpecific) {
-      return `All 5 Campus Halls · ${rows.length || 91} Competing Tribes`;
+    if (selectedGroup === "all") {
+      return `All 5 Campus Halls · ${allTribes.length || 91} Competing Tribes`;
     }
-    if (venue?.location && venue.location !== "No Venue Allocated") {
-      const vName = venue.venueName ? ` (${venue.venueName})` : "";
-      return `📍 ${venue.location}${vName} · ${filteredRows.length} Competing Tribes`;
+    if (activeVenue?.location && activeVenue.location !== "No Venue Allocated") {
+      const vName = activeVenue.venueName ? ` (${activeVenue.venueName})` : "";
+      return `📍 ${activeVenue.location}${vName} · ${currentRows.length} Competing Tribes`;
     }
-    return `📍 ${selectedIdentifier} · ${filteredRows.length} Competing Tribes`;
-  }, [isHostSpecific, venue, selectedIdentifier, rows.length, filteredRows.length]);
+    return `📍 No Venue Allocated · ${currentRows.length} Competing Tribes`;
+  }, [selectedGroup, activeVenue, allTribes.length, currentRows.length]);
 
   return (
     <div className="scoreboard-bg min-h-screen text-[#f7f1e6] flex flex-col justify-between relative">
@@ -215,15 +253,13 @@ export function ScoreboardClient({
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e4b84a]/15 border border-[#e4b84a]/25 px-2.5 sm:px-3 py-0.5 sm:py-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#e4b84a] animate-pulse" />
                 <span className="text-[9px] sm:text-[10px] font-bold font-mono uppercase tracking-[0.14em] sm:tracking-[0.18em] text-[#e4b84a]">
-                  {isHostSpecific
-                    ? `📍 Station Projector · ${venue?.location && venue.location !== "No Venue Allocated" ? venue.location : selectedIdentifier}`
-                    : "Projector Grand Scoreboard"}
+                  {activeBadge}
                 </span>
               </span>
               <span className="text-[10px] sm:text-[11px] text-white/45 font-medium">MSEC SIP 2026–27</span>
             </div>
             <h1 className="display text-2xl sm:text-3xl md:text-5xl font-extrabold text-white tracking-tight">
-              {activeGroupTitle}
+              {activeTitle}
             </h1>
             <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-[#e4b84a]/80 font-medium flex items-center gap-1.5">
               <span className="truncate">{activeSubtitle}</span>
@@ -248,27 +284,24 @@ export function ScoreboardClient({
           </div>
         </div>
 
-        {/* Group / Venue Switcher Bar — ALWAYS visible so users and hosts can seamlessly switch between groups and overall */}
+        {/* Group / Venue Switcher Bar — ALWAYS visible so users & venue hosts can switch freely */}
         <div className="my-4 sm:my-5 flex overflow-x-auto no-scrollbar flex-nowrap md:flex-wrap items-center gap-2 pb-1 animate-fade-in">
           {groupsList.map((grp) => {
             const isSelected =
-              selectedIdentifier === grp.id ||
-              (grp.id !== "all" && (
-                selectedIdentifier.toLowerCase() === grp.id.toLowerCase() ||
-                venue?.groupName?.toLowerCase() === grp.id.toLowerCase()
-              ));
+              selectedGroup.toLowerCase() === grp.id.toLowerCase() ||
+              (grp.id !== "all" && activeVenue?.groupName?.toLowerCase() === grp.id.toLowerCase());
             return (
               <button
                 key={grp.id}
                 type="button"
                 onClick={() => {
-                  setSelectedIdentifier(grp.id);
+                  setSelectedGroup(grp.id);
                   setIndex(0);
                 }}
                 className={`rounded-2xl px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   isSelected
                     ? "bg-gradient-to-r from-[#e4b84a] to-[#d4a332] text-[#12071f] shadow-lg shadow-[#e4b84a]/20 ring-1 ring-[#e4b84a]/30 scale-[1.02]"
-                    : "border border-white/[0.1] bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:border-white/20"
+                    : "border border-white/[0.1] bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:border-white/20 hover:text-white"
                 }`}
               >
                 <span>{grp.icon}</span>
@@ -286,15 +319,16 @@ export function ScoreboardClient({
           {visible.length === 0 ? (
             <div className="py-16 sm:py-24 text-center rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-8 animate-fade-in">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4 opacity-30">📊</div>
-              <p className="text-base sm:text-xl font-bold text-white/70">No scores recorded yet for this group / station.</p>
+              <p className="text-base sm:text-xl font-bold text-white/70">No scores recorded yet for this group.</p>
               <p className="mt-1 text-xs text-white/40">Evaluations submitted by venue hosts will appear live here instantly.</p>
             </div>
           ) : (
             visible.map((row, i) => {
               const rowTheme = row.theme || row.venueTheme || (row.groupName ? GROUP_THEMES[row.groupName] : "");
+              const displayRank = row.rank ? rankLabel(row.rank) : i + 1;
               return (
                 <div
-                  key={`${row.id}-${row.rank}-${i}`}
+                  key={`${row.id}-${selectedGroup}-${i}`}
                   className={`grid grid-cols-[38px_1fr_auto] sm:grid-cols-[64px_1fr_auto] md:grid-cols-[80px_1fr_auto] items-center rounded-xl sm:rounded-2xl border px-3 sm:px-5 py-2.5 sm:py-4 transition-all duration-300 ${
                     row.rank === 1
                       ? "border-[#e4b84a]/40 bg-gradient-to-r from-[#e4b84a]/[0.12] via-white/[0.04] to-transparent shadow-lg shadow-[#e4b84a]/[0.08]"
@@ -322,7 +356,7 @@ export function ScoreboardClient({
                         : "text-white/30"
                     }`}
                   >
-                    {row.rank ? rankLabel(row.rank) : i + 1}
+                    {displayRank}
                   </span>
 
                   <div className="min-w-0 pr-2 sm:pr-4">
