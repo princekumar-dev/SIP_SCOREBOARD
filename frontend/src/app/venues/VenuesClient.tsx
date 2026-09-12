@@ -121,7 +121,7 @@ export function VenuesClient({ initialVenues }: { initialVenues: Venue[] }) {
                   ) : (
                     <div className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-300 px-2.5 py-1 text-xs font-semibold text-amber-800">
                       <span>⚠️</span>
-                      <span>Active Group Rotating</span>
+                      <span>Classes Not Allocated</span>
                     </div>
                   )}
                 </div>

@@ -83,14 +83,18 @@ async function getLeaderboardForIdentifier(param, res) {
           venueName: venue.venueName,
           participatingClasses: venue.participatingClasses || [],
           motif: venue.motif,
+          isAllocated: true,
         }
       : effectiveGroup
       ? {
           id: effectiveGroup,
           groupName: effectiveGroup,
           theme: effectiveGroup,
-          location: "Assigned Venue",
-          venueName: "Station",
+          location: "No Venue Allocated",
+          venueName: "Unallocated",
+          participatingClasses: [],
+          motif: "creative",
+          isAllocated: false,
         }
       : null,
     lastUpdated: new Date().toISOString(),
@@ -234,7 +238,7 @@ router.get("/tribes/:id", async (req, res) => {
   ]);
   const scoreMap = Object.fromEntries(scores.map((s) => [String(s.eventId), s]));
   const standing = overall.find((row) => row.id === String(tribe._id));
-  const venueBoard = await buildLeaderboard({ venueId: tribe.venueId._id });
+  const venueBoard = tribe.venueId?._id ? await buildLeaderboard({ venueId: tribe.venueId._id }) : [];
   const venueStanding = venueBoard.find((row) => row.id === String(tribe._id));
 
   res.json({
@@ -243,13 +247,21 @@ router.get("/tribes/:id", async (req, res) => {
     tribeName: tribe.tribeName,
     theme: tribe.theme,
     status: tribe.status,
-    venue: {
-      id: String(tribe.venueId._id),
-      theme: tribe.venueId.theme,
-      location: tribe.venueId.location,
-      venueName: tribe.venueId.venueName,
-      motif: tribe.venueId.motif,
-    },
+    venue: tribe.venueId
+      ? {
+          id: String(tribe.venueId._id || tribe.venueId),
+          theme: tribe.venueId.theme || tribe.theme,
+          location: tribe.venueId.location || "No Venue Allocated",
+          venueName: tribe.venueId.venueName || "Unallocated",
+          motif: tribe.venueId.motif || "creative",
+        }
+      : {
+          id: "",
+          theme: tribe.theme || "Unallocated",
+          location: "No Venue Allocated",
+          venueName: "Unallocated",
+          motif: "creative",
+        },
     overallRank: standing?.rank || null,
     venueRank: venueStanding?.rank || null,
     totalScore: standing?.totalScore || (await getTribeTotal(tribe._id)),

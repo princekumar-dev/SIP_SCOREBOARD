@@ -71,7 +71,7 @@ export function TribeModal({
                 {data.tribeCode}
               </span>
               <span className="text-xs text-[#f7f1e6]/50">
-                {data.venue?.theme || "Domain"} · 📍 {data.venue?.location || "Hall Assignment in Progress"}
+                {data.venue?.theme || data.theme || "Theme"} · 📍 {data.venue?.location && data.venue.location !== "No Venue Allocated" ? data.venue.location : "No Venue Allocated"}
               </span>
             </div>
 
@@ -95,20 +95,24 @@ export function TribeModal({
             <div className="mt-6">
               <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#e4b84a]">Event Evaluations</h3>
               <div className="mt-3 space-y-2">
-                {data.events.map((event) => (
-                  <div
-                    key={event.id}
-                    className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-sm"
-                  >
-                    <div>
-                      <p className="font-medium text-white">{event.eventName}</p>
-                      <p className="text-xs text-[#f7f1e6]/40">Max {event.maximumScore} pts</p>
+                {!data.events || data.events.length === 0 ? (
+                  <p className="text-xs text-[#f7f1e6]/40 py-2">No evaluation events created yet.</p>
+                ) : (
+                  data.events.map((event) => (
+                    <div
+                      key={event.id}
+                      className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-sm"
+                    >
+                      <div>
+                        <p className="font-medium text-white">{event.eventName}</p>
+                        <p className="text-xs text-[#f7f1e6]/40">Max {event.maximumScore} pts</p>
+                      </div>
+                      <span className="display text-xl font-bold text-[#e4b84a]">
+                        {event.score !== null ? event.score : "—"}
+                      </span>
                     </div>
-                    <span className="display text-xl font-bold text-[#e4b84a]">
-                      {event.score !== null ? event.score : "—"}
-                    </span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 

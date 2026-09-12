@@ -178,21 +178,25 @@ export function ScoreboardClient({
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e4b84a]/15 border border-[#e4b84a]/25 px-2.5 sm:px-3 py-0.5 sm:py-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#e4b84a] animate-pulse" />
                 <span className="text-[9px] sm:text-[10px] font-bold font-mono uppercase tracking-[0.14em] sm:tracking-[0.18em] text-[#e4b84a]">
-                  {isHostSpecific ? `📍 Station Projector · ${venue?.location || "Assigned Hall"}` : "Projector Grand Scoreboard"}
+                  {isHostSpecific
+                    ? `📍 Station Projector · ${venue?.location && venue.location !== "No Venue Allocated" ? venue.location : "Unallocated Station"}`
+                    : "Projector Grand Scoreboard"}
                 </span>
               </span>
               <span className="text-[10px] sm:text-[11px] text-white/45 font-medium">MSEC SIP 2026–27</span>
             </div>
             <h1 className="display text-2xl sm:text-3xl md:text-5xl font-extrabold text-white tracking-tight">
               {venue
-                ? `${venue.groupName ? `${venue.groupName}: ` : ""}${venue.theme}`
+                ? `${venue.groupName ? `${venue.groupName}: ` : ""}${venue.theme || "Leaderboard"}`
                 : "Overall SIP Grand Leaderboard"}
             </h1>
             <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-[#e4b84a]/80 font-medium flex items-center gap-1.5">
               <span>📍</span>
               <span className="truncate">
                 {venue
-                  ? `${venue.location} (${venue.venueName || "Station"}) · ${filteredRows.length} Competing Tribes`
+                  ? venue.location && venue.location !== "No Venue Allocated"
+                    ? `${venue.location} (${venue.venueName || "Station"}) · ${filteredRows.length} Competing Tribes`
+                    : `No Venue Allocated · ${filteredRows.length} Competing Tribes`
                   : "All 5 Campus Halls · 90 Competing Tribes"}
               </span>
             </p>

@@ -309,7 +309,7 @@ export default function ScoresPage() {
               {selectedGroupName}: {activeGroup.theme}
             </h1>
             <p className="text-xs text-[#6d6178] mt-0.5">
-              Host Location: <strong className="text-[#4b1d7a]">{activeVenue?.location || "Assigned Hall"}</strong> · 18 Competing Teams
+              Host Location: <strong className="text-[#4b1d7a]">{activeVenue?.location || "No Venue Allocated"}</strong> · 18 Competing Teams
             </p>
           </div>
 
@@ -450,8 +450,10 @@ export default function ScoresPage() {
                   </label>
                   <span className="inline-flex items-center gap-2 rounded-xl border border-[#4b1d7a]/20 bg-[#4b1d7a]/5 px-3.5 py-1.5 text-xs font-extrabold text-[#12071f]">
                     <span>📍</span>
-                    <span>{activeVenue?.location || "Assigned Hall"}</span>
-                    <span className="text-[10px] text-[#6d6178] font-normal">({activeVenue?.venueName})</span>
+                    <span>{activeVenue?.location || "No Venue Allocated"}</span>
+                    {activeVenue?.venueName && (
+                      <span className="text-[10px] text-[#6d6178] font-normal">({activeVenue.venueName})</span>
+                    )}
                     <span className="rounded-md bg-purple-100 border border-purple-200 px-2 py-0.5 text-[10px] font-bold text-purple-800">
                       🔒 Your Assigned Hall
                     </span>
@@ -461,10 +463,10 @@ export default function ScoresPage() {
                 <button
                   type="button"
                   onClick={assignGroupToVenue}
-                  disabled={rotating}
+                  disabled={rotating || !activeVenue}
                   className="rounded-full border border-[#4b1d7a]/30 bg-white px-3.5 py-1.5 text-xs font-bold text-[#4b1d7a] hover:bg-[#4b1d7a] hover:text-white transition disabled:opacity-50 shadow-xs"
                 >
-                  {rotating ? "Updating…" : `📍 Set ${selectedGroupName} Active in ${activeVenue?.location.split(" ")[0] || "this Hall"}`}
+                  {rotating ? "Updating…" : `📍 Set ${selectedGroupName} Active in ${activeVenue?.location?.split(" ")[0] || "this Hall"}`}
                 </button>
               </div>
             )}
@@ -475,28 +477,37 @@ export default function ScoresPage() {
             <label className="text-xs font-bold uppercase tracking-wider text-[#4b1d7a] block mb-2.5">
               3. Select Active Evaluation Event:
             </label>
-            <div className="flex flex-wrap gap-2">
-              {events.map((e) => {
-                const isSelected = selectedEventId === e.id;
-                return (
-                  <button
-                    key={e.id}
-                    type="button"
-                    onClick={() => setSelectedEventId(e.id)}
-                    className={`rounded-xl px-4 py-2 text-xs font-bold transition flex items-center gap-2 ${
-                      isSelected
-                        ? "bg-[#e4b84a] text-[#12071f] shadow-md shadow-[#e4b84a]/20"
-                        : "bg-white text-[#12071f] border border-[#4b1d7a]/15 hover:bg-white/80"
-                    }`}
-                  >
-                    <span>{e.eventName}</span>
-                    <span className="rounded-md bg-black/10 px-1.5 py-0.5 text-[10px] font-mono font-bold">
-                      Max {e.maximumScore} pts
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            {events.length === 0 ? (
+              <div className="rounded-xl bg-amber-50 border border-amber-300 p-3.5 text-xs text-amber-800 flex items-center justify-between">
+                <span>⚠️ No active scoring events found.</span>
+                <Link href="/admin/events" className="rounded-lg bg-amber-600 px-3 py-1 text-white font-bold text-xs hover:bg-amber-700">
+                  + Create Event
+                </Link>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {events.map((e) => {
+                  const isSelected = selectedEventId === e.id;
+                  return (
+                    <button
+                      key={e.id}
+                      type="button"
+                      onClick={() => setSelectedEventId(e.id)}
+                      className={`rounded-xl px-4 py-2 text-xs font-bold transition flex items-center gap-2 ${
+                        isSelected
+                          ? "bg-[#e4b84a] text-[#12071f] shadow-md shadow-[#e4b84a]/20"
+                          : "bg-white text-[#12071f] border border-[#4b1d7a]/15 hover:bg-white/80"
+                      }`}
+                    >
+                      <span>{e.eventName}</span>
+                      <span className="rounded-md bg-black/10 px-1.5 py-0.5 text-[10px] font-mono font-bold">
+                        Max {e.maximumScore} pts
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -508,7 +519,7 @@ export default function ScoresPage() {
                 {selectedGroupName}: {activeGroup.theme} · 18 Teams Matrix
               </h2>
               <p className="text-xs text-[#6d6178]">
-                Evaluating Event: <strong className="text-[#4b1d7a]">{activeEvent?.eventName}</strong> (0 to {activeEvent?.maximumScore || 100} points)
+                Evaluating Event: <strong className="text-[#4b1d7a]">{activeEvent?.eventName || "No event selected"}</strong> {activeEvent ? `(0 to ${activeEvent.maximumScore} points)` : ""}
               </p>
             </div>
             <span className="rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-[11px] font-bold text-emerald-800 flex items-center gap-1.5">
@@ -517,7 +528,13 @@ export default function ScoresPage() {
             </span>
           </div>
 
-          {loadingRows ? (
+          {events.length === 0 ? (
+            <div className="py-20 text-center text-sm text-[#6d6178]">
+              <span className="text-3xl block mb-2">⚡</span>
+              <p className="font-bold text-base text-[#12071f]">No Scoring Events Created Yet</p>
+              <p className="text-xs text-[#6d6178] mt-1">Please create an event in Event Management to begin scoring teams.</p>
+            </div>
+          ) : loadingRows ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#4b1d7a] border-t-transparent" />
               <p className="text-xs font-semibold text-[#6d6178]">Loading team scores…</p>

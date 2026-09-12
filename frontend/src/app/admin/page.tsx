@@ -83,16 +83,16 @@ export default function AdminHome() {
   const hostVenue: HostData | null = data?.hostData || (user?.venue ? {
     venueId: user.venueId,
     groupName: user.venue.groupName,
-    venueName: user.venue.venueName || "Assigned Venue",
+    venueName: user.venue.venueName || "Unallocated",
     theme: user.venue.theme,
-    location: user.venue.location,
+    location: user.venue.location || "No Venue Allocated",
     motif: "creative",
     participatingClasses: user.venue.participatingClasses || [],
     description: "",
     isLocked: false,
     tribeCount: 18,
     scoresCount: 0,
-    totalExpectedScores: 90,
+    totalExpectedScores: 0,
     topTribes: [],
   } : null);
 
@@ -149,6 +149,13 @@ export default function AdminHome() {
     ? Math.min(100, Math.round((hostVenue.scoresCount / hostVenue.totalExpectedScores) * 100))
     : 0;
 
+  const activeClassesText =
+    hostVenue?.participatingClasses && hostVenue.participatingClasses.length > 0
+      ? hostVenue.participatingClasses.join(", ")
+      : activeGroup?.classes && activeGroup.classes.length > 0
+      ? activeGroup.classes.join(", ")
+      : "No Classes Allocated";
+
   return (
     <AdminShell>
       <div className="space-y-8 max-w-6xl mx-auto">
@@ -161,7 +168,7 @@ export default function AdminHome() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="rounded-full bg-[#e4b84a]/20 border border-[#e4b84a]/40 px-3 py-0.5 text-[10px] font-mono uppercase tracking-widest text-[#e4b84a]">
-                  {isSuperAdmin ? "👑 Master Control Room" : `🏛️ Host Station · ${hostVenue?.location || "Assigned Venue"}`}
+                  {isSuperAdmin ? "👑 Master Control Room" : `🏛️ Host Station · ${hostVenue?.location || "No Venue Allocated"}`}
                 </span>
                 <span className="flex items-center gap-1.5 text-xs text-white/60">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -176,7 +183,7 @@ export default function AdminHome() {
               <p className="mt-1.5 text-xs md:text-sm text-white/80 max-w-2xl leading-relaxed">
                 {isSuperAdmin
                   ? "Real-time multi-venue scoring system · 5 Groups · 90 Tribes · Instant live updates"
-                  : `Assigned: ${hostVenue?.groupName || activeGroup?.groupName || "Group"} (${hostVenue?.theme || activeGroup?.theme || "Theme"}) · ${hostVenue?.participatingClasses?.length ? hostVenue.participatingClasses.join(", ") : activeGroup?.classes?.join(", ") || "Classes"} · ${hostVenue?.tribeCount ?? 18} Assigned Tribes`}
+                  : `Assigned: ${hostVenue?.groupName || activeGroup?.groupName || "Group"} (${hostVenue?.theme || activeGroup?.theme || "Theme"}) · ${activeClassesText} · ${hostVenue?.tribeCount ?? 18} Assigned Tribes`}
               </p>
             </div>
 
@@ -290,7 +297,7 @@ export default function AdminHome() {
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
                   <span className="text-3xl md:text-4xl font-black tracking-tight text-[#12071f]">
-                    {data?.cards.events ?? 5}
+                    {data?.cards.events ?? 0}
                   </span>
                   <span className="text-xs font-semibold text-amber-600">scoring criteria</span>
                 </div>

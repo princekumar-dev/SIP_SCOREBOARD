@@ -15,7 +15,7 @@ export default async function TribePage({ params }: { params: Promise<{ id: stri
         </div>
         <h1 className="display text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight">{tribe.tribeName}</h1>
         <p className="mt-2 sm:mt-3 text-sm sm:text-base text-[#6d6178] leading-relaxed">
-          {tribe.venue.theme} · {tribe.venue.location}
+          {tribe.venue?.theme || tribe.theme || "Theme"} · 📍 {tribe.venue?.location || "No Venue Allocated"}
         </p>
       </div>
       <div className="mt-6 sm:mt-8 grid grid-cols-3 gap-2.5 sm:gap-4">
@@ -38,19 +38,25 @@ export default async function TribePage({ params }: { params: Promise<{ id: stri
         <div className="border-b border-[#4b1d7a]/[0.08] px-4 sm:px-6 py-4 sm:py-5">
           <h2 className="display text-xl sm:text-2xl font-bold">Event Scores</h2>
         </div>
-        {tribe.events.map((event, i) => (
-          <div
-            key={event.id}
-            className="flex items-center justify-between border-b border-[#4b1d7a]/[0.05] px-4 sm:px-6 py-3.5 sm:py-4 last:border-0 row-hover animate-fade-in-up"
-            style={{ animationDelay: `${0.3 + i * 0.04}s` }}
-          >
-            <div className="min-w-0 pr-3">
-              <p className="font-semibold text-sm sm:text-base text-[#12071f] truncate">{event.eventName}</p>
-              <p className="text-xs text-[#6d6178]">Max {event.maximumScore} pts</p>
-            </div>
-            <p className="display text-xl sm:text-2xl score-highlight font-bold tabular-nums shrink-0">{event.score ?? "—"}</p>
+        {!tribe.events || tribe.events.length === 0 ? (
+          <div className="p-8 text-center text-xs text-[#6d6178]">
+            No scoring events created yet.
           </div>
-        ))}
+        ) : (
+          tribe.events.map((event, i) => (
+            <div
+              key={event.id}
+              className="flex items-center justify-between border-b border-[#4b1d7a]/[0.05] px-4 sm:px-6 py-3.5 sm:py-4 last:border-0 row-hover animate-fade-in-up"
+              style={{ animationDelay: `${0.3 + i * 0.04}s` }}
+            >
+              <div className="min-w-0 pr-3">
+                <p className="font-semibold text-sm sm:text-base text-[#12071f] truncate">{event.eventName}</p>
+                <p className="text-xs text-[#6d6178]">Max {event.maximumScore} pts</p>
+              </div>
+              <p className="display text-xl sm:text-2xl score-highlight font-bold tabular-nums shrink-0">{event.score ?? "—"}</p>
+            </div>
+          ))
+        )}
       </section>
       <section className="mt-8 sm:mt-10">
         <h2 className="display mb-4 sm:mb-5 text-xl sm:text-2xl font-bold animate-fade-in-up">Members</h2>

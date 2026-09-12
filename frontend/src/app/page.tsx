@@ -7,11 +7,10 @@ import type { LeaderboardRow, Venue } from "@/lib/types";
 
 export const revalidate = 30;
 
-const HOUSES = [
+const HOUSES_CONFIG = [
   {
     groupName: "Group I",
-    title: "Creative & Design",
-    classes: "AI & DS – A · CSE – A · Civil",
+    defaultTitle: "Creative & Design",
     icon: "🎨",
     cardClass: "group-card-1",
     accentText: "text-rose-600",
@@ -19,8 +18,7 @@ const HOUSES = [
   },
   {
     groupName: "Group II",
-    title: "Technology & Innovation",
-    classes: "Cyber Security · AI & DS – B · IT – A",
+    defaultTitle: "Technology & Innovation",
     icon: "💻",
     cardClass: "group-card-2",
     accentText: "text-cyan-600",
@@ -28,8 +26,7 @@ const HOUSES = [
   },
   {
     groupName: "Group III",
-    title: "Space & Cosmic",
-    classes: "AI & ML · IT – C · EEE",
+    defaultTitle: "Space & Cosmic",
     icon: "🚀",
     cardClass: "group-card-3",
     accentText: "text-purple-600",
@@ -37,8 +34,7 @@ const HOUSES = [
   },
   {
     groupName: "Group IV",
-    title: "Legends & Mythology",
-    classes: "ECE – A · CSE – B · MECH",
+    defaultTitle: "Legends & Mythology",
     icon: "🛡️",
     cardClass: "group-card-4",
     accentText: "text-amber-600",
@@ -46,8 +42,7 @@ const HOUSES = [
   },
   {
     groupName: "Group V",
-    title: "Power & Energy",
-    classes: "ECE – B · CSE – C · IT – B",
+    defaultTitle: "Power & Energy",
     icon: "⚡",
     cardClass: "group-card-5",
     accentText: "text-orange-600",
@@ -151,31 +146,46 @@ export default async function HomePage() {
         </div>
 
         <div className="grid gap-3.5 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
-          {HOUSES.map((house, i) => (
-            <Link
-              key={house.groupName}
-              href={`/tribes?group=${encodeURIComponent(house.groupName)}`}
-              className={`panel p-4 sm:p-5 flex flex-col justify-between group relative overflow-hidden transition-all duration-300 hover-lift ${house.cardClass}`}
-              style={{ animationDelay: `${0.05 + i * 0.05}s` }}
-            >
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl group-hover:scale-125 transition-transform duration-300">{house.icon}</span>
-                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${house.badge}`}>
-                    {house.groupName}
-                  </span>
+          {HOUSES_CONFIG.map((houseConfig, i) => {
+            const assignedVenue = venues.find(
+              (v) => v.groupName?.toLowerCase() === houseConfig.groupName.toLowerCase()
+            );
+            const classesText =
+              assignedVenue?.participatingClasses && assignedVenue.participatingClasses.length > 0
+                ? assignedVenue.participatingClasses.join(" · ")
+                : "Classes Not Allocated";
+            const venueTitle = assignedVenue?.theme || houseConfig.defaultTitle;
+            const locationText = assignedVenue?.location ? `📍 ${assignedVenue.location}` : "📍 No Venue Allocated";
+
+            return (
+              <Link
+                key={houseConfig.groupName}
+                href={`/tribes?group=${encodeURIComponent(houseConfig.groupName)}`}
+                className={`panel p-4 sm:p-5 flex flex-col justify-between group relative overflow-hidden transition-all duration-300 hover-lift ${houseConfig.cardClass}`}
+                style={{ animationDelay: `${0.05 + i * 0.05}s` }}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl group-hover:scale-125 transition-transform duration-300">{houseConfig.icon}</span>
+                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${houseConfig.badge}`}>
+                      {houseConfig.groupName}
+                    </span>
+                  </div>
+                  <p className="font-extrabold text-base text-[#12071f] mt-3 leading-snug">{venueTitle}</p>
+                  <p className="text-[11px] text-[#6d6178] mt-1 font-medium leading-relaxed">
+                    👥 {classesText}
+                  </p>
+                  <p className="text-[10px] text-[#4b1d7a]/70 mt-1 font-medium truncate">
+                    {locationText}
+                  </p>
                 </div>
-                <p className="font-extrabold text-base text-[#12071f] mt-3 leading-snug">{house.title}</p>
-                <p className="text-[11px] text-[#6d6178] mt-1 font-medium leading-relaxed">
-                  👥 {house.classes}
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-black/[0.06] flex items-center justify-between text-xs font-bold">
-                <span className={house.accentText}>18 Tribes</span>
-                <span className="text-[#12071f] transition-transform group-hover:translate-x-1">→</span>
-              </div>
-            </Link>
-          ))}
+                <div className="mt-4 pt-3 border-t border-black/[0.06] flex items-center justify-between text-xs font-bold">
+                  <span className={houseConfig.accentText}>18 Tribes</span>
+                  <span className="text-[#12071f] transition-transform group-hover:translate-x-1">→</span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
@@ -208,8 +218,8 @@ export default async function HomePage() {
                     <span className="live-dot" />
                   </div>
                 </div>
-                <p className="font-extrabold mt-3 text-base text-[#12071f] leading-snug">{venue.location}</p>
-                <p className="mt-1.5 text-xs text-[#6d6178] font-medium">{venue.theme}</p>
+                <p className="font-extrabold mt-3 text-base text-[#12071f] leading-snug">{venue.location || "Unallocated Hall"}</p>
+                <p className="mt-1.5 text-xs text-[#6d6178] font-medium">{venue.theme || "Theme Unassigned"}</p>
                 <div className="mt-2.5">
                   {venue.participatingClasses && venue.participatingClasses.length > 0 ? (
                     <p className="text-[10px] text-[#4b1d7a]/80 font-semibold truncate">
@@ -217,7 +227,7 @@ export default async function HomePage() {
                     </p>
                   ) : (
                     <p className="text-[10px] text-amber-700 font-medium">
-                      ⚠️ Active Group Rotating
+                      ⚠️ Classes Not Allocated
                     </p>
                   )}
                 </div>

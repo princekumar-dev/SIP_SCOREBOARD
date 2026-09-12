@@ -149,8 +149,8 @@ export function LeaderboardTable({
 
           {showVenue ? (
             <div className="hidden md:flex flex-col truncate">
-              <span className="text-xs text-[#4b1d7a] font-bold truncate">{row.venueTheme || "Main Arena"}</span>
-              <span className="text-[10px] text-[#6d6178] truncate">{row.location}</span>
+              <span className="text-xs text-[#4b1d7a] font-bold truncate">{row.venueTheme || row.theme || "Main Arena"}</span>
+              <span className="text-[10px] text-[#6d6178] truncate">{row.location && row.location !== "No Venue Allocated" ? `📍 ${row.location}` : "📍 No Venue Allocated"}</span>
             </div>
           ) : null}
 

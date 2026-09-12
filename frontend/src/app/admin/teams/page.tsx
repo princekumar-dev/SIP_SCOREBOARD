@@ -162,7 +162,7 @@ export default function TeamsPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-[#12071f] px-3 py-0.5 text-[11px] font-bold text-[#e4b84a]">
-                🛡️ {isVenueHost ? `Station Tribes · ${hostLocation || "Assigned Venue"}` : "Tribe Directory"}
+                🛡️ {isVenueHost ? `Station Tribes · ${hostLocation || "No Venue Allocated"}` : "Tribe Directory"}
               </span>
               <span className="text-xs text-[#6d6178]">
                 {isVenueHost
@@ -181,7 +181,7 @@ export default function TeamsPage() {
             </h1>
             <p className="text-xs text-[#6d6178] mt-0.5">
               {isVenueHost
-                ? `Showing the ${filteredTribes.length} tribes actively assigned to ${hostLocation || "your venue"} in score entry order.`
+                ? `Showing the ${filteredTribes.length} tribes actively assigned to ${hostLocation || "your station"} in score entry order.`
                 : "Inspect team members, live cumulative scores, and current venue assignments."}
             </p>
           </div>
@@ -369,11 +369,11 @@ export default function TeamsPage() {
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm">📍</span>
                             <span className="text-xs font-extrabold text-[#12071f]">
-                              {tribe.location || hostLocation || "Venue Hall"}
+                              {tribe.location || hostLocation || "No Venue Allocated"}
                             </span>
                           </div>
                           <span className="text-[11px] text-[#6d6178] block">
-                            {tribe.theme || "Active Station"}
+                            {tribe.theme || "Unallocated"}
                           </span>
                         </div>
                         <div className="text-right">
@@ -443,7 +443,7 @@ export default function TeamsPage() {
                     </span>
                     <p className="flex items-center gap-1.5 text-xs font-bold text-[#12071f] mt-0.5">
                       <span>📍</span>
-                      <span>{tribe.location || hostLocation || "Venue Hall"}</span>
+                      <span>{tribe.location || hostLocation || "No Venue Allocated"}</span>
                     </p>
                   </div>
                 </div>

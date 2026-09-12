@@ -41,7 +41,7 @@ export default async function VenuePage({ params }: { params: Promise<{ id: stri
               ))
             ) : (
               <span className="rounded-md bg-amber-50 border border-amber-200 px-2.5 py-0.5 sm:py-1 text-xs font-semibold text-amber-800">
-                ⚠️ Not Allocated
+                ⚠️ Classes Not Allocated
               </span>
             )}
           </div>

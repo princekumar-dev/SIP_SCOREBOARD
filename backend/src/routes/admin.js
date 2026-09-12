@@ -223,7 +223,7 @@ router.get("/dashboard", async (req, res) => {
         isLocked: hostVenue.isLocked,
         tribeCount: hostTribes.length,
         scoresCount: hostScoresCount,
-        totalExpectedScores: hostTribes.length * (events || 5),
+        totalExpectedScores: hostTribes.length * events,
         topTribes: hostLeaderboard.slice(0, 5),
       };
     }
