@@ -68,9 +68,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
             <nav className="hidden md:flex items-center gap-1 text-[13px] text-[#f7f1e6]/65">
               {[
-                { href: "/admin", label: "Dashboard" },
-                { href: "/admin/scores", label: "Score Entry" },
-                { href: "/admin/teams", label: "Tribes" },
+                { href: "/admin", label: "Dashboard", showFor: "all" },
+                { href: "/admin/scores", label: "Score Entry", showFor: "host_only" },
+                { href: "/admin/teams", label: "Tribes", showFor: "all" },
                 {
                   href:
                     user?.role !== "super_admin" && (user?.venue?.groupName || user?.venueId)
@@ -78,23 +78,26 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                       : "/scoreboard",
                   label: "Scoreboard",
                   isExternal: true,
+                  showFor: "all",
                 },
-              ].map((item) => {
-                const isActive = path === item.href;
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    target={item.isExternal ? "_blank" : undefined}
-                    className={`nav-link px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center gap-1.5 ${
-                      isActive ? "nav-link-active text-[#e4b84a] font-semibold bg-[#e4b84a]/[0.06]" : "hover:text-white hover:bg-white/[0.04]"
-                    }`}
-                  >
-                    <span>{item.label}</span>
-                    {item.isExternal && <span className="text-[10px] text-[#e4b84a]">↗</span>}
-                  </Link>
-                );
-              })}
+              ]
+                .filter((item) => item.showFor === "all" || (item.showFor === "host_only" && user?.role !== "super_admin"))
+                .map((item) => {
+                  const isActive = path === item.href;
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      target={item.isExternal ? "_blank" : undefined}
+                      className={`nav-link px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center gap-1.5 ${
+                        isActive ? "nav-link-active text-[#e4b84a] font-semibold bg-[#e4b84a]/[0.06]" : "hover:text-white hover:bg-white/[0.04]"
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      {item.isExternal && <span className="text-[10px] text-[#e4b84a]">↗</span>}
+                    </Link>
+                  );
+                })}
             </nav>
           </div>
 
@@ -149,30 +152,31 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </div>
 
             {[
-              { href: "/admin", label: "Dashboard" },
-              { href: "/admin/scores", label: "Score Entry" },
-              { href: "/admin/teams", label: "Tribes" },
+              { href: "/admin", label: "Dashboard", showFor: "all" },
+              { href: "/admin/scores", label: "Score Entry", showFor: "host_only" },
+              { href: "/admin/teams", label: "Tribes", showFor: "all" },
               {
                 href: user?.role !== "super_admin" && user?.venueId ? `/scoreboard?venue=${user.venueId}` : "/scoreboard",
                 label: "Scoreboard",
+                showFor: "all",
               },
-            ].map((item) => {
-              const isActive = path === item.href;
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
-                    isActive
-                      ? "text-[#e4b84a] bg-[#e4b84a]/[0.08] font-bold"
-                      : "text-white/70 hover:bg-white/[0.04]"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+            ]
+              .filter((item) => item.showFor === "all" || (item.showFor === "host_only" && user?.role !== "super_admin"))
+              .map((item) => {
+                const isActive = path === item.href;
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block px-3 py-2 rounded-lg text-sm transition ${
+                      isActive ? "bg-[#e4b84a]/10 text-[#e4b84a] font-bold" : "text-white/70 hover:text-white"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
 
             <div className="border-t border-white/[0.06] pt-3">
               <button

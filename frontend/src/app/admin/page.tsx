@@ -333,13 +333,23 @@ export default function AdminHome() {
 
             {/* Quick action buttons */}
             <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto">
-              <Link
-                href="/admin/scores"
-                className="flex-1 sm:flex-initial text-center justify-center rounded-xl bg-gradient-to-r from-[#e4b84a] to-[#d4a332] px-4 py-2.5 text-xs font-extrabold text-[#12071f] shadow-lg shadow-[#e4b84a]/20 hover:brightness-105 active:scale-95 transition flex items-center gap-2"
-              >
-                <span>📝</span>
-                <span>Score Entry Matrix</span>
-              </Link>
+              {isVenueHost ? (
+                <Link
+                  href="/admin/scores"
+                  className="flex-1 sm:flex-initial text-center justify-center rounded-xl bg-gradient-to-r from-[#e4b84a] to-[#d4a332] px-4 py-2.5 text-xs font-extrabold text-[#12071f] shadow-lg shadow-[#e4b84a]/20 hover:brightness-105 active:scale-95 transition flex items-center gap-2"
+                >
+                  <span>📝</span>
+                  <span>Score Entry Matrix</span>
+                </Link>
+              ) : (
+                <a
+                  href="#reports"
+                  className="flex-1 sm:flex-initial text-center justify-center rounded-xl bg-gradient-to-r from-[#e4b84a] to-[#d4a332] px-4 py-2.5 text-xs font-extrabold text-[#12071f] shadow-lg shadow-[#e4b84a]/20 hover:brightness-105 active:scale-95 transition flex items-center gap-2"
+                >
+                  <span>📊</span>
+                  <span>Excel Reports Hub</span>
+                </a>
+              )}
               <Link
                 href="/admin/teams"
                 className="flex-1 sm:flex-initial text-center justify-center rounded-xl border border-white/20 bg-white/10 backdrop-blur-md px-4 py-2.5 text-xs font-bold text-white hover:bg-white/20 transition flex items-center gap-2"
@@ -438,7 +448,7 @@ export default function AdminHome() {
         {/* ========================================================================= */}
         {/* EXCEL & CSV DOWNLOAD HUB (User Requested Core Feature)                   */}
         {/* ========================================================================= */}
-        <div className="rounded-3xl border border-[#4b1d7a]/20 bg-gradient-to-br from-[#ffffff] via-[#fdfbf7] to-[#fbf7ee] p-6 md:p-7 shadow-md">
+        <div id="reports" className="rounded-3xl border border-[#4b1d7a]/20 bg-gradient-to-br from-[#ffffff] via-[#fdfbf7] to-[#fbf7ee] p-6 md:p-7 shadow-md">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#4b1d7a]/10 pb-4 mb-5">
             <div>
               <div className="flex items-center gap-2 mb-1">
