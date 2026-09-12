@@ -1,10 +1,11 @@
 /**
- * Utility functions for exporting multi-tab Excel workbooks (.xlsx)
- * with dedicated tabs for VENUE 1, VENUE 2, VENUE 3, VENUE 4, VENUE 5,
- * with:
- *  - Styled header banner (TRIBE FORMATION, VENUE NAME, CLASSES)
+ * Premium Excel Export Utility for MSEC SIP Team Events
+ *
+ * Generates multi-tab Excel workbooks (.xlsx) with:
+ *  - Official SIP header banners (TRIBE FORMATION, VENUE NAME, CLASSES)
  *  - Vertically merged cells for Tribe Code, Team Name, Group, Team Lead, and Scores
- *  - Each team member listed on their own row under TEAM MEMBERS and SECTION
+ *  - Individual row listings for each student member and their department/section
+ *  - Calculated event totals and overall arena standings
  */
 
 import * as XLSX from "xlsx";
@@ -68,7 +69,7 @@ const GROUPS_CONFIG = [
 ];
 
 /**
- * Builds rows and vertical merges for a specific venue group
+ * Builds rows, column widths, and cell merges for a specific venue group sheet
  */
 function buildGroupSheet(
   gConfig: (typeof GROUPS_CONFIG)[0],
@@ -87,19 +88,23 @@ function buildGroupSheet(
     "Class Section",
     ...eventHeaders,
     "Total Score",
+    ...(isBlankTemplate ? ["Judge Remarks / Feedback"] : []),
   ];
 
   const totalCols = headers.length;
 
-  // Title Banner Rows
+  // Header Banner Rows matching SIP specifications
   const titleRow1 = new Array(totalCols).fill("");
-  titleRow1[0] = "TRIBE FORMATION";
+  titleRow1[0] = "MSEC STUDENT INDUCTION PROGRAMME (SIP)";
 
   const titleRow2 = new Array(totalCols).fill("");
-  titleRow2[0] = gConfig.venueBanner;
+  titleRow2[0] = "TRIBE FORMATION & EVALUATION SCORECARD";
 
   const titleRow3 = new Array(totalCols).fill("");
-  titleRow3[0] = gConfig.classesBanner;
+  titleRow3[0] = `${gConfig.venueBanner}  ·  (${gConfig.theme})`;
+
+  const titleRow4 = new Array(totalCols).fill("");
+  titleRow4[0] = gConfig.classesBanner;
 
   const spacerRow = new Array(totalCols).fill("");
 
@@ -107,6 +112,7 @@ function buildGroupSheet(
     titleRow1,
     titleRow2,
     titleRow3,
+    titleRow4,
     spacerRow,
     headers,
   ];
@@ -115,6 +121,7 @@ function buildGroupSheet(
     { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } },
     { s: { r: 2, c: 0 }, e: { r: 2, c: totalCols - 1 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } },
   ];
 
   tribes.forEach((t) => {
@@ -129,6 +136,7 @@ function buildGroupSheet(
       return match && match.score !== null ? match.score : 0;
     });
     const totalVal = isBlankTemplate ? "" : t.totalScore;
+    const extraBlank = isBlankTemplate ? [""] : [];
 
     if (t.members.length === 0) {
       allRows.push([
@@ -141,6 +149,7 @@ function buildGroupSheet(
         "",
         ...scoreCells,
         totalVal,
+        ...extraBlank,
       ]);
     } else {
       const firstMember = t.members[0];
@@ -154,6 +163,7 @@ function buildGroupSheet(
         firstMember.classSection || "",
         ...scoreCells,
         totalVal,
+        ...extraBlank,
       ]);
 
       for (let i = 1; i < t.members.length; i++) {
@@ -168,21 +178,25 @@ function buildGroupSheet(
           m.classSection || "",
           ...events.map(() => ""),
           "",
+          ...extraBlank,
         ]);
       }
 
-      // Add vertical cell merges for Team Name, Lead, Code, Group, Scores across this team block
+      // Vertical cell merges across the team's member block
       if (memberCount > 1) {
         merges.push({ s: { r: startRowIdx, c: 0 }, e: { r: endRowIdx, c: 0 } }); // Tribe Code
         merges.push({ s: { r: startRowIdx, c: 1 }, e: { r: endRowIdx, c: 1 } }); // Team Name
         merges.push({ s: { r: startRowIdx, c: 2 }, e: { r: endRowIdx, c: 2 } }); // Group
         merges.push({ s: { r: startRowIdx, c: 3 }, e: { r: endRowIdx, c: 3 } }); // Team Lead
 
-        // Merge Event Scores & Total
         events.forEach((_, evIdx) => {
           merges.push({ s: { r: startRowIdx, c: 7 + evIdx }, e: { r: endRowIdx, c: 7 + evIdx } });
         });
         merges.push({ s: { r: startRowIdx, c: 7 + events.length }, e: { r: endRowIdx, c: 7 + events.length } }); // Total Score
+
+        if (isBlankTemplate) {
+          merges.push({ s: { r: startRowIdx, c: 8 + events.length }, e: { r: endRowIdx, c: 8 + events.length } }); // Remarks
+        }
       }
     }
   });
@@ -200,13 +214,14 @@ function buildGroupSheet(
     { wch: 16 }, // Class Section
     ...events.map(() => ({ wch: 24 })), // Events
     { wch: 16 }, // Total Score
+    ...(isBlankTemplate ? [{ wch: 30 }] : []),
   ];
 
   return ws;
 }
 
 /**
- * 1. Comprehensive Multi-Sheet Excel Workbook (.xlsx)
+ * 1. Comprehensive Master Multi-Sheet Excel Workbook (.xlsx)
  */
 export function downloadMasterArenaExcel(data: MasterExportData) {
   const wb = XLSX.utils.book_new();
@@ -231,16 +246,20 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
   );
 
   const title1 = new Array(overallHeaders.length).fill("");
-  title1[0] = "MSEC SIP ARENA — OVERALL SCOREBOARD & LEADERBOARD";
+  title1[0] = "MSEC STUDENT INDUCTION PROGRAMME (SIP)";
 
   const title2 = new Array(overallHeaders.length).fill("");
-  title2[0] = "5 Groups · 5 Live Venue Halls · 90 Tribes";
+  title2[0] = "OVERALL ARENA LEADERBOARD & STANDINGS";
+
+  const title3 = new Array(overallHeaders.length).fill("");
+  title3[0] = "5 Groups · 5 Live Venue Halls · 90 Tribes";
 
   const spacer = new Array(overallHeaders.length).fill("");
 
   const overallRows: (string | number)[][] = [
     title1,
     title2,
+    title3,
     spacer,
     overallHeaders,
   ];
@@ -248,6 +267,7 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
   const overallMerges: XLSX.Range[] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: overallHeaders.length - 1 } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: overallHeaders.length - 1 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: overallHeaders.length - 1 } },
   ];
 
   overallSorted.forEach((t, idx) => {
@@ -349,7 +369,7 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
   });
 
   const dateStr = new Date().toISOString().split("T")[0];
-  XLSX.writeFile(wb, `MSEC_SIP_Arena_Scores_${dateStr}.xlsx`);
+  XLSX.writeFile(wb, `MSEC_SIP_Arena_Scorecard_${dateStr}.xlsx`);
 }
 
 /**
@@ -403,13 +423,16 @@ export function downloadMembersDirectoryExcel(data: MasterExportData) {
     ];
 
     const title1 = new Array(headers.length).fill("");
-    title1[0] = "TRIBE FORMATION — STUDENT MEMBER ROSTER";
+    title1[0] = "MSEC STUDENT INDUCTION PROGRAMME (SIP)";
 
     const title2 = new Array(headers.length).fill("");
-    title2[0] = g.venueBanner;
+    title2[0] = "TRIBE FORMATION — STUDENT MEMBER ROSTER";
 
     const title3 = new Array(headers.length).fill("");
-    title3[0] = g.classesBanner;
+    title3[0] = g.venueBanner;
+
+    const title4 = new Array(headers.length).fill("");
+    title4[0] = g.classesBanner;
 
     const spacer = new Array(headers.length).fill("");
 
@@ -417,6 +440,7 @@ export function downloadMembersDirectoryExcel(data: MasterExportData) {
       title1,
       title2,
       title3,
+      title4,
       spacer,
       headers,
     ];
@@ -425,6 +449,7 @@ export function downloadMembersDirectoryExcel(data: MasterExportData) {
       { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } },
       { s: { r: 1, c: 0 }, e: { r: 1, c: headers.length - 1 } },
       { s: { r: 2, c: 0 }, e: { r: 2, c: headers.length - 1 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: headers.length - 1 } },
     ];
 
     groupTribes.forEach((t) => {
