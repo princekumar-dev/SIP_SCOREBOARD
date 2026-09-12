@@ -62,6 +62,7 @@ export default function ScoresPage() {
   const [globalError, setGlobalError] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingRows, setLoadingRows] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Load user profile, venues, and events
   useEffect(() => {
@@ -148,6 +149,16 @@ export default function ScoresPage() {
     () => venues.find((v) => v.id === selectedVenueId),
     [venues, selectedVenueId]
   );
+
+  const filteredTribeRows = useMemo(() => {
+    if (!searchQuery.trim()) return tribeRows;
+    const q = searchQuery.toLowerCase().trim();
+    return tribeRows.filter(
+      (t) =>
+        t.tribeName.toLowerCase().includes(q) ||
+        t.tribeCode.toLowerCase().includes(q)
+    );
+  }, [tribeRows, searchQuery]);
 
   const groupsFromVenues = useMemo(() => {
     return ALL_GROUPS.map((g) => {
@@ -656,23 +667,55 @@ export default function ScoresPage() {
 
         {/* 18 Teams Evaluation Grid */}
         <div className="rounded-2xl sm:rounded-3xl border border-[#4b1d7a]/15 bg-white/90 shadow-sm backdrop-blur-md overflow-hidden">
-          <div className="border-b border-[#4b1d7a]/10 bg-[#4b1d7a]/5 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="border-b border-[#4b1d7a]/10 bg-[#4b1d7a]/5 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-[#12071f]">
-                {selectedGroupName && activeGroup
-                  ? `${selectedGroupName}: ${activeGroup.theme} · 18 Teams Matrix`
-                  : "Team Evaluation Matrix"}
+              <h2 className="text-base sm:text-lg font-bold text-[#12071f] flex items-center gap-2">
+                <span>
+                  {selectedGroupName && activeGroup
+                    ? `${selectedGroupName}: ${activeGroup.theme} · ${tribeRows.length} Teams Matrix`
+                    : "Team Evaluation Matrix"}
+                </span>
+                {selectedGroupName ? (
+                  <span className="hidden sm:inline-flex rounded-full bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Live Sync Active</span>
+                  </span>
+                ) : null}
               </h2>
-              <p className="text-xs text-[#6d6178]">
+              <p className="text-xs text-[#6d6178] mt-0.5">
                 Evaluating Event: <strong className="text-[#4b1d7a]">{activeEvent?.eventName || "No event selected"}</strong> {activeEvent ? `(0 to ${activeEvent.maximumScore} points)` : ""}
               </p>
             </div>
-            {selectedGroupName ? (
-              <span className="rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-[11px] font-bold text-emerald-800 flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Live Sync Active</span>
-              </span>
-            ) : null}
+
+            {selectedGroupName && tribeRows.length > 0 && (
+              <div className="flex items-center gap-2.5 w-full md:w-auto">
+                <div className="relative flex-1 md:w-72">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#4b1d7a]/60 pointer-events-none">🔍</span>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search team name or code (e.g. Byte, SIP-019)…"
+                    className="w-full rounded-xl border border-[#4b1d7a]/20 bg-white pl-8 pr-7 py-2 text-xs text-[#12071f] font-semibold placeholder-[#6d6178]/60 outline-none transition focus:border-[#4b1d7a] focus:ring-2 focus:ring-[#4b1d7a]/15 shadow-xs"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#6d6178] hover:text-[#12071f] cursor-pointer p-0.5"
+                      title="Clear search"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                {searchQuery && (
+                  <span className="text-[11px] font-bold text-[#4b1d7a] bg-[#4b1d7a]/8 px-2 py-1 rounded-lg shrink-0">
+                    {filteredTribeRows.length} of {tribeRows.length}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {!selectedGroupName ? (
@@ -696,9 +739,22 @@ export default function ScoresPage() {
             <div className="py-20 text-center text-sm text-[#6d6178]">
               No tribes found in {selectedGroupName}.
             </div>
+          ) : filteredTribeRows.length === 0 ? (
+            <div className="py-16 text-center text-sm text-[#6d6178] animate-fade-in">
+              <span className="text-3xl block mb-2">🔍</span>
+              <p className="font-bold text-base text-[#12071f]">No matching teams found</p>
+              <p className="text-xs text-[#6d6178] mt-1">No team matches "{searchQuery}" in {selectedGroupName}.</p>
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="mt-3 rounded-xl border border-[#4b1d7a]/20 bg-white px-3.5 py-1.5 text-xs font-bold text-[#4b1d7a] hover:bg-[#4b1d7a]/5 transition cursor-pointer"
+              >
+                Clear Search
+              </button>
+            </div>
           ) : (
             <div className="divide-y divide-[#4b1d7a]/8">
-              {tribeRows.map((tribe, index) => {
+              {filteredTribeRows.map((tribe, index) => {
                 const isSaving = savingTribeId === tribe.tribeId;
                 const isSaved = savedSuccessMap[tribe.tribeId];
                 const currentVal = scoresInput[tribe.tribeId] || "";
