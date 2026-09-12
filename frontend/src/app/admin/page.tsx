@@ -206,7 +206,7 @@ export default function AdminHome() {
               <Link
                 href={
                   isVenueHost && (hostVenue?.groupName || hostVenue?.venueId)
-                    ? `/scoreboard?group=${encodeURIComponent(hostVenue?.groupName || "")}&venue=${encodeURIComponent(hostVenue?.venueId || "")}`
+                    ? `/scoreboard?group=${encodeURIComponent(hostVenue?.groupName || "")}&venue=${encodeURIComponent(hostVenue?.venueId || "")}&station=true`
                     : "/scoreboard"
                 }
                 target="_blank"

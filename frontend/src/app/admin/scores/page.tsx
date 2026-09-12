@@ -379,7 +379,7 @@ export default function ScoresPage() {
                 </button>
 
                 <Link
-                  href={`/scoreboard?group=${encodeURIComponent(selectedGroupName)}${selectedVenueId ? `&venue=${encodeURIComponent(selectedVenueId)}` : activeVenue?.id ? `&venue=${encodeURIComponent(activeVenue.id)}` : ""}`}
+                  href={`/scoreboard?group=${encodeURIComponent(selectedGroupName)}${selectedVenueId ? `&venue=${encodeURIComponent(selectedVenueId)}` : activeVenue?.id ? `&venue=${encodeURIComponent(activeVenue.id)}` : ""}&station=true`}
                   target="_blank"
                   className="rounded-xl border border-[#4b1d7a]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#4b1d7a] shadow-sm hover:bg-[#4b1d7a]/5 transition flex items-center justify-center gap-1.5 text-center"
                 >

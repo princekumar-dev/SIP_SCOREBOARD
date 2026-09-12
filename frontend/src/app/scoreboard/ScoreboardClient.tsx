@@ -59,9 +59,13 @@ export function ScoreboardClient({
   const params = useSearchParams();
   const groupParam = params.get("group") || params.get("groupName");
   const venueParam = params.get("venue") || params.get("venueId");
-  const cleanGroup = groupParam && groupParam.trim() !== "" ? groupParam.trim() : null;
-  const cleanVenue = venueParam && venueParam.trim() !== "" ? venueParam.trim() : null;
+  const stationParam = params.get("station");
+  const cleanGroup = groupParam && groupParam.trim() !== "" && groupParam !== "all" ? groupParam.trim() : null;
+  const cleanVenue = venueParam && venueParam.trim() !== "" && venueParam !== "all" ? venueParam.trim() : null;
   const requestedParam = cleanGroup || cleanVenue || "all";
+
+  // Station locked mode is active when opened specifically for a group station or station=true
+  const isStationLocked = Boolean(cleanGroup || cleanVenue || stationParam === "true" || stationParam === "1");
 
   const [selectedGroup, setSelectedGroup] = useState(requestedParam);
   const [allTribes, setAllTribes] = useState<LeaderboardRow[]>(initial.rows || []);
@@ -284,35 +288,37 @@ export function ScoreboardClient({
           </div>
         </div>
 
-        {/* Group / Venue Switcher Bar — ALWAYS visible so users & venue hosts can switch freely */}
-        <div className="my-4 sm:my-5 flex overflow-x-auto no-scrollbar flex-nowrap md:flex-wrap items-center gap-2 pb-1 animate-fade-in">
-          {groupsList.map((grp) => {
-            const isSelected =
-              selectedGroup.toLowerCase() === grp.id.toLowerCase() ||
-              (grp.id !== "all" && activeVenue?.groupName?.toLowerCase() === grp.id.toLowerCase());
-            return (
-              <button
-                key={grp.id}
-                type="button"
-                onClick={() => {
-                  setSelectedGroup(grp.id);
-                  setIndex(0);
-                }}
-                className={`rounded-2xl px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                  isSelected
-                    ? "bg-gradient-to-r from-[#e4b84a] to-[#d4a332] text-[#12071f] shadow-lg shadow-[#e4b84a]/20 ring-1 ring-[#e4b84a]/30 scale-[1.02]"
-                    : "border border-white/[0.1] bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:border-white/20 hover:text-white"
-                }`}
-              >
-                <span>{grp.icon}</span>
-                <span>{grp.label}</span>
-                {grp.location && (
-                  <span className="text-[10px] opacity-60 hidden md:inline">· {grp.location}</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {/* Group / Venue Switcher Bar — ONLY visible on Overall / Multi-hall projector, hidden when locked to a specific station projector */}
+        {!isStationLocked && (
+          <div className="my-4 sm:my-5 flex overflow-x-auto no-scrollbar flex-nowrap md:flex-wrap items-center gap-2 pb-1 animate-fade-in">
+            {groupsList.map((grp) => {
+              const isSelected =
+                selectedGroup.toLowerCase() === grp.id.toLowerCase() ||
+                (grp.id !== "all" && activeVenue?.groupName?.toLowerCase() === grp.id.toLowerCase());
+              return (
+                <button
+                  key={grp.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedGroup(grp.id);
+                    setIndex(0);
+                  }}
+                  className={`rounded-2xl px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                    isSelected
+                      ? "bg-gradient-to-r from-[#e4b84a] to-[#d4a332] text-[#12071f] shadow-lg shadow-[#e4b84a]/20 ring-1 ring-[#e4b84a]/30 scale-[1.02]"
+                      : "border border-white/[0.1] bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:border-white/20 hover:text-white"
+                  }`}
+                >
+                  <span>{grp.icon}</span>
+                  <span>{grp.label}</span>
+                  {grp.location && (
+                    <span className="text-[10px] opacity-60 hidden md:inline">· {grp.location}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Scoreboard Rows */}
         <div className="flex-1 space-y-2 sm:space-y-3 mt-2 sm:mt-3">

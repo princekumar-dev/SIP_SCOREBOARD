@@ -74,7 +74,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 {
                   href:
                     user?.role !== "super_admin" && (user?.venue?.groupName || user?.venueId)
-                      ? `/scoreboard?group=${encodeURIComponent(user?.venue?.groupName || user?.venueId || "")}`
+                      ? `/scoreboard?group=${encodeURIComponent(user?.venue?.groupName || user?.venueId || "")}&station=true`
                       : "/scoreboard",
                   label: "Scoreboard",
                   isExternal: true,
