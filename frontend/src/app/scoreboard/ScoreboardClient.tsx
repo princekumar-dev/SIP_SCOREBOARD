@@ -152,15 +152,26 @@ export function ScoreboardClient({
     return Array.from({ length: 8 }, (_, i) => filteredRows[(index + i) % filteredRows.length]);
   }, [filteredRows, index, isHostSpecific]);
 
-  // Build group list dynamically from real venue data (shown only on overall / multi-hall projector)
+  // Build group list dynamically with guaranteed unique keys (shown only on overall / multi-hall projector)
   const groupsList = useMemo(() => {
     const all = { id: "all", label: "Overall (90 Tribes)", icon: "🏆", location: undefined as string | undefined };
-    const groupButtons = venues.map((v) => ({
-      id: v.groupName,
-      label: `${v.groupName} · ${v.theme}`,
-      icon: GROUP_ICONS[v.groupName] || "🛡️",
-      location: v.location,
-    }));
+    const groupButtons = [
+      { id: "Group I", label: "Group I · Creative & Design", icon: "🎨" },
+      { id: "Group II", label: "Group II · Technology & Innovation", icon: "💻" },
+      { id: "Group III", label: "Group III · Space & Cosmic", icon: "🚀" },
+      { id: "Group IV", label: "Group IV · Legends & Mythology", icon: "🛡️" },
+      { id: "Group V", label: "Group V · Power & Energy", icon: "⚡" },
+    ].map((g) => {
+      const assignedVenue = venues.find(
+        (v) => v.groupName && v.groupName.toLowerCase() === g.id.toLowerCase()
+      );
+      return {
+        id: g.id,
+        label: g.label,
+        icon: g.icon,
+        location: assignedVenue?.location,
+      };
+    });
     return [all, ...groupButtons];
   }, [venues]);
 
