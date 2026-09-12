@@ -1,12 +1,10 @@
 /**
  * Utility functions for exporting multi-tab Excel workbooks (.xlsx)
  * with dedicated tabs for VENUE 1, VENUE 2, VENUE 3, VENUE 4, VENUE 5,
- * with styled header banner:
- *   TRIBE FORMATION
- *   VENUE X: [HALL NAME]
- *   CLASSES: [DEPARTMENTS / SECTIONS]
- *
- * Each team member is listed on their own individual row under TEAM MEMBERS.
+ * with:
+ *  - Styled header banner (TRIBE FORMATION, VENUE NAME, CLASSES)
+ *  - Vertically merged cells for Tribe Code, Team Name, Group, Team Lead, and Scores
+ *  - Each team member listed on their own row under TEAM MEMBERS and SECTION
  */
 
 import * as XLSX from "xlsx";
@@ -70,7 +68,7 @@ const GROUPS_CONFIG = [
 ];
 
 /**
- * Builds rows and merges for a specific venue group
+ * Builds rows and vertical merges for a specific venue group
  */
 function buildGroupSheet(
   gConfig: (typeof GROUPS_CONFIG)[0],
@@ -113,7 +111,17 @@ function buildGroupSheet(
     headers,
   ];
 
+  const merges: XLSX.Range[] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: totalCols - 1 } },
+  ];
+
   tribes.forEach((t) => {
+    const startRowIdx = allRows.length;
+    const memberCount = t.members.length > 0 ? t.members.length : 1;
+    const endRowIdx = startRowIdx + memberCount - 1;
+
     const leadName = t.leader?.name || (t.members[0] ? t.members[0].name : "N/A");
     const scoreCells = events.map((e) => {
       if (isBlankTemplate) return "";
@@ -162,17 +170,25 @@ function buildGroupSheet(
           "",
         ]);
       }
+
+      // Add vertical cell merges for Team Name, Lead, Code, Group, Scores across this team block
+      if (memberCount > 1) {
+        merges.push({ s: { r: startRowIdx, c: 0 }, e: { r: endRowIdx, c: 0 } }); // Tribe Code
+        merges.push({ s: { r: startRowIdx, c: 1 }, e: { r: endRowIdx, c: 1 } }); // Team Name
+        merges.push({ s: { r: startRowIdx, c: 2 }, e: { r: endRowIdx, c: 2 } }); // Group
+        merges.push({ s: { r: startRowIdx, c: 3 }, e: { r: endRowIdx, c: 3 } }); // Team Lead
+
+        // Merge Event Scores & Total
+        events.forEach((_, evIdx) => {
+          merges.push({ s: { r: startRowIdx, c: 7 + evIdx }, e: { r: endRowIdx, c: 7 + evIdx } });
+        });
+        merges.push({ s: { r: startRowIdx, c: 7 + events.length }, e: { r: endRowIdx, c: 7 + events.length } }); // Total Score
+      }
     }
   });
 
   const ws = XLSX.utils.aoa_to_sheet(allRows);
-
-  // Set merged headers across the top 3 banner rows
-  ws["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } },
-    { s: { r: 2, c: 0 }, e: { r: 2, c: totalCols - 1 } },
-  ];
+  ws["!merges"] = merges;
 
   ws["!cols"] = [
     { wch: 14 }, // Tribe Code
@@ -229,7 +245,16 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
     overallHeaders,
   ];
 
+  const overallMerges: XLSX.Range[] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: overallHeaders.length - 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: overallHeaders.length - 1 } },
+  ];
+
   overallSorted.forEach((t, idx) => {
+    const startRowIdx = overallRows.length;
+    const memberCount = t.members.length > 0 ? t.members.length : 1;
+    const endRowIdx = startRowIdx + memberCount - 1;
+
     const leadName = t.leader?.name || (t.members[0] ? t.members[0].name : "N/A");
     const scoreCells = data.events.map((e) => {
       const match = t.eventScores.find((es) => es.eventId === e.id);
@@ -283,14 +308,24 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
           "",
         ]);
       }
+
+      if (memberCount > 1) {
+        overallMerges.push({ s: { r: startRowIdx, c: 0 }, e: { r: endRowIdx, c: 0 } }); // Rank
+        overallMerges.push({ s: { r: startRowIdx, c: 1 }, e: { r: endRowIdx, c: 1 } }); // Code
+        overallMerges.push({ s: { r: startRowIdx, c: 2 }, e: { r: endRowIdx, c: 2 } }); // Team Name
+        overallMerges.push({ s: { r: startRowIdx, c: 3 }, e: { r: endRowIdx, c: 3 } }); // Group
+        overallMerges.push({ s: { r: startRowIdx, c: 4 }, e: { r: endRowIdx, c: 4 } }); // Venue
+        overallMerges.push({ s: { r: startRowIdx, c: 5 }, e: { r: endRowIdx, c: 5 } }); // Lead
+        data.events.forEach((_, evIdx) => {
+          overallMerges.push({ s: { r: startRowIdx, c: 9 + evIdx }, e: { r: endRowIdx, c: 9 + evIdx } });
+        });
+        overallMerges.push({ s: { r: startRowIdx, c: 9 + data.events.length }, e: { r: endRowIdx, c: 9 + data.events.length } }); // Total
+      }
     }
   });
 
   const wsOverall = XLSX.utils.aoa_to_sheet(overallRows);
-  wsOverall["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: overallHeaders.length - 1 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: overallHeaders.length - 1 } },
-  ];
+  wsOverall["!merges"] = overallMerges;
   wsOverall["!cols"] = [
     { wch: 10 },
     { wch: 14 },
@@ -360,6 +395,7 @@ export function downloadMembersDirectoryExcel(data: MasterExportData) {
       "Tribe Code",
       "Team Name",
       "Group",
+      "Team Lead",
       "Member Name",
       "Department",
       "Class Section",
@@ -385,34 +421,63 @@ export function downloadMembersDirectoryExcel(data: MasterExportData) {
       headers,
     ];
 
+    const dirMerges: XLSX.Range[] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: headers.length - 1 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: headers.length - 1 } },
+    ];
+
     groupTribes.forEach((t) => {
+      const startRowIdx = rows.length;
+      const leadName = t.leader?.name || (t.members[0] ? t.members[0].name : "N/A");
+      const memberCount = t.members.length > 0 ? t.members.length : 1;
+      const endRowIdx = startRowIdx + memberCount - 1;
+
       if (t.members.length === 0) {
-        rows.push([t.tribeCode, t.tribeName, t.groupName, "No members listed", "", "", ""]);
+        rows.push([t.tribeCode, t.tribeName, t.groupName, leadName, "No members listed", "", "", ""]);
       } else {
-        t.members.forEach((m) => {
+        const firstM = t.members[0];
+        rows.push([
+          t.tribeCode,
+          t.tribeName,
+          t.groupName,
+          leadName,
+          firstM.name,
+          firstM.department || "",
+          firstM.classSection || "",
+          firstM.isLeader ? "Team Leader" : "Team Member",
+        ]);
+
+        for (let i = 1; i < t.members.length; i++) {
+          const m = t.members[i];
           rows.push([
-            t.tribeCode,
-            t.tribeName,
-            t.groupName,
+            "",
+            "",
+            "",
+            "",
             m.name,
             m.department || "",
             m.classSection || "",
             m.isLeader ? "Team Leader" : "Team Member",
           ]);
-        });
+        }
+
+        if (memberCount > 1) {
+          dirMerges.push({ s: { r: startRowIdx, c: 0 }, e: { r: endRowIdx, c: 0 } });
+          dirMerges.push({ s: { r: startRowIdx, c: 1 }, e: { r: endRowIdx, c: 1 } });
+          dirMerges.push({ s: { r: startRowIdx, c: 2 }, e: { r: endRowIdx, c: 2 } });
+          dirMerges.push({ s: { r: startRowIdx, c: 3 }, e: { r: endRowIdx, c: 3 } });
+        }
       }
     });
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws["!merges"] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } },
-      { s: { r: 1, c: 0 }, e: { r: 1, c: headers.length - 1 } },
-      { s: { r: 2, c: 0 }, e: { r: 2, c: headers.length - 1 } },
-    ];
+    ws["!merges"] = dirMerges;
     ws["!cols"] = [
       { wch: 14 },
       { wch: 26 },
       { wch: 12 },
+      { wch: 24 },
       { wch: 28 },
       { wch: 22 },
       { wch: 16 },
