@@ -57,7 +57,7 @@ export function VenuesClient({ initialVenues }: { initialVenues: Venue[] }) {
       <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {sortedVenues.map((venue, i) => {
           const isAllocated = Boolean(venue.groupName && venue.groupName !== "null");
-          const themeInfo = (isAllocated && VENUE_THEME_MAP[venue.groupName]) || {
+          const themeInfo = (isAllocated && venue.groupName && VENUE_THEME_MAP[venue.groupName]) || {
             cardClass: "bg-white/80 border border-black/10 hover:border-[#4b1d7a]/30 shadow-xs",
             badgeClass: "bg-amber-500/10 text-amber-700 border-amber-400/30",
             icon: "⏳",

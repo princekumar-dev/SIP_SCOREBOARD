@@ -189,6 +189,43 @@ router.put("/groups/assign-venue", async (req, res) => {
   });
 });
 
+router.put("/groups/unassign-venue", async (req, res) => {
+  const { venueId } = req.body || {};
+  if (!venueId) {
+    return res.status(400).json({ error: "venueId is required." });
+  }
+  const targetVenue = await Venue.findById(venueId);
+  if (!targetVenue) return res.status(404).json({ error: "Venue not found." });
+
+  const prevGroup = targetVenue.groupName;
+  if (prevGroup) {
+    await Tribe.updateMany({ groupName: prevGroup }, { $set: { venueId: null } });
+  }
+
+  targetVenue.groupName = null;
+  targetVenue.theme = "Pending Group Selection";
+  targetVenue.motif = "neutral";
+  targetVenue.participatingClasses = [];
+  targetVenue.description = "Waiting for venue host to select and activate the currently present group.";
+  await targetVenue.save();
+
+  await writeAudit(req, {
+    action: "group.venue_unassigned",
+    entityType: "venue",
+    entityId: targetVenue._id,
+    newValue: { groupName: null, venueId: String(targetVenue._id) },
+    reason: req.body.reason || "Host unassigned group to standby",
+  });
+
+  broadcast(req, { kind: "venue-move", venueId: String(targetVenue._id) });
+  broadcast(req, { kind: "leaderboard" });
+  res.json({
+    ok: true,
+    venueLocation: targetVenue.location,
+    message: `${targetVenue.location} is now in Standby mode.`,
+  });
+});
+
 router.get("/dashboard", async (req, res) => {
   await ensureVenueGroupSync();
   const [tribes, venues, events, scores, recent, venueList, leaderboard] = await Promise.all([

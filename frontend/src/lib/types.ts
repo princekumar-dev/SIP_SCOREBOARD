@@ -1,6 +1,6 @@
 export type Venue = {
   id: string;
-  groupName: string;
+  groupName: string | null;
   venueName: string;
   theme: string;
   location: string;

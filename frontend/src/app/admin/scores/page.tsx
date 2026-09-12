@@ -82,8 +82,14 @@ export default function ScoresPage() {
         const initialVenueId = user.venueId || (vList[0] ? vList[0].id : "");
         setSelectedVenueId(initialVenueId);
 
-        // DO NOT pre-select any group by default! Host/Admin must pick the present group.
-        setSelectedGroupName("");
+        // If this venue already has an active group assigned in DB, load it on refresh!
+        const activeVenueObj = vList.find((v) => v.id === initialVenueId);
+        const existingGroup = user?.venue?.groupName || (activeVenueObj?.groupName && activeVenueObj.groupName !== "null" ? activeVenueObj.groupName : "");
+        if (existingGroup) {
+          setSelectedGroupName(existingGroup);
+        } else {
+          setSelectedGroupName("");
+        }
 
         if (eList[0]) {
           setSelectedEventId(eList[0].id);
@@ -205,9 +211,49 @@ export default function ScoresPage() {
     }
   }
 
-  function handleSelectGroup(groupName: string) {
-    setSelectedGroupName(groupName);
-    assignGroupToVenue(groupName);
+  // Unassign/deselect group and reset venue to standby
+  async function unassignGroupFromVenue() {
+    if (!selectedVenueId) return;
+    setRotating(true);
+    setGlobalError("");
+    setGlobalMessage("");
+    try {
+      const res = await apiSend<any>("/api/admin/groups/unassign-venue", getToken(), "PUT", {
+        venueId: selectedVenueId,
+        reason: `Host unselected ${selectedGroupName || "group"} to standby in ${activeVenue?.location || "Venue"}`,
+      });
+      setSelectedGroupName("");
+      setTribeRows([]);
+      setGlobalMessage(`✓ ${selectedGroupName || "Group"} unselected. ${res.venueLocation || "Venue"} is now in Standby mode.`);
+      try {
+        const freshVenues = await apiGet<Venue[]>("/api/venues");
+        setVenues(freshVenues);
+      } catch {
+        setVenues((prev) =>
+          prev.map((v) => (v.id === selectedVenueId ? { ...v, groupName: null } : v))
+        );
+      }
+      if (currentUser && currentUser.venue) {
+        setCurrentUser((prev: any) => ({
+          ...prev,
+          venue: { ...prev.venue, groupName: null },
+        }));
+      }
+    } catch (err: any) {
+      setGlobalError(err.message || "Failed to unassign group.");
+    } finally {
+      setRotating(false);
+    }
+  }
+
+  async function handleSelectGroup(groupName: string) {
+    if (selectedGroupName === groupName) {
+      // Toggle OFF: Click again on active group to unselect
+      await unassignGroupFromVenue();
+    } else {
+      setSelectedGroupName(groupName);
+      await assignGroupToVenue(groupName);
+    }
   }
 
   // Save single tribe score
@@ -320,14 +366,27 @@ export default function ScoresPage() {
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
             {selectedGroupName ? (
-              <Link
-                href={`/scoreboard?group=${encodeURIComponent(selectedGroupName)}${selectedVenueId ? `&venue=${encodeURIComponent(selectedVenueId)}` : activeVenue?.id ? `&venue=${encodeURIComponent(activeVenue.id)}` : ""}`}
-                target="_blank"
-                className="rounded-xl border border-[#4b1d7a]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#4b1d7a] shadow-sm hover:bg-[#4b1d7a]/5 transition flex items-center justify-center gap-1.5 text-center"
-              >
-                <span>📺</span>
-                <span>Projector ({selectedGroupName})</span>
-              </Link>
+              <>
+                <button
+                  type="button"
+                  onClick={unassignGroupFromVenue}
+                  disabled={rotating}
+                  className="rounded-xl border border-red-300 bg-red-50/80 px-3.5 py-2.5 text-xs font-bold text-red-700 hover:bg-red-100 hover:border-red-400 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="Unselect current group and return venue to Standby"
+                >
+                  <span>✕</span>
+                  <span>Unselect {selectedGroupName}</span>
+                </button>
+
+                <Link
+                  href={`/scoreboard?group=${encodeURIComponent(selectedGroupName)}${selectedVenueId ? `&venue=${encodeURIComponent(selectedVenueId)}` : activeVenue?.id ? `&venue=${encodeURIComponent(activeVenue.id)}` : ""}`}
+                  target="_blank"
+                  className="rounded-xl border border-[#4b1d7a]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#4b1d7a] shadow-sm hover:bg-[#4b1d7a]/5 transition flex items-center justify-center gap-1.5 text-center"
+                >
+                  <span>📺</span>
+                  <span>Projector ({selectedGroupName})</span>
+                </Link>
+              </>
             ) : (
               <span className="rounded-xl border border-dashed border-[#4b1d7a]/20 bg-white/50 px-4 py-2.5 text-xs font-bold text-[#6d6178]/60 flex items-center justify-center gap-1.5 cursor-not-allowed">
                 <span>📺</span>
@@ -355,13 +414,13 @@ export default function ScoresPage() {
         {globalMessage && (
           <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-3.5 text-xs font-semibold text-emerald-800 animate-fade-in flex items-center justify-between">
             <span>✅ {globalMessage}</span>
-            <button type="button" onClick={() => setGlobalMessage("")} className="text-emerald-800 hover:text-black">✕</button>
+            <button type="button" onClick={() => setGlobalMessage("")} className="text-emerald-800 hover:text-black cursor-pointer">✕</button>
           </div>
         )}
         {globalError && (
           <div className="rounded-2xl border border-red-300 bg-red-50 p-3.5 text-xs font-semibold text-red-800 animate-fade-in flex items-center justify-between">
             <span>⚠️ {globalError}</span>
-            <button type="button" onClick={() => setGlobalError("")} className="text-red-800 hover:text-black">✕</button>
+            <button type="button" onClick={() => setGlobalError("")} className="text-red-800 hover:text-black cursor-pointer">✕</button>
           </div>
         )}
 
@@ -369,11 +428,24 @@ export default function ScoresPage() {
         <div className="rounded-3xl border border-[#4b1d7a]/15 bg-white/90 p-5 md:p-6 shadow-sm backdrop-blur-md space-y-5">
           {/* Step 1: Group Selector */}
           <div>
-            <div className="flex items-center justify-between mb-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
               <label className="text-xs font-bold uppercase tracking-wider text-[#4b1d7a]">
                 1. Select Present Group to Score:
               </label>
-              <span className="text-[11px] text-[#6d6178]">Choose any group present in your venue hall</span>
+              <div className="flex items-center gap-2">
+                {selectedGroupName && (
+                  <button
+                    type="button"
+                    onClick={unassignGroupFromVenue}
+                    disabled={rotating}
+                    className="rounded-lg border border-red-300 bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-700 hover:bg-red-100 transition cursor-pointer flex items-center gap-1"
+                  >
+                    <span>✕</span>
+                    <span>Unselect {selectedGroupName} (Set to Standby)</span>
+                  </button>
+                )}
+                <span className="text-[11px] text-[#6d6178]">Click a card to select / click again to unselect</span>
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
               {groupsFromVenues.map((g, idx) => {
@@ -409,10 +481,15 @@ export default function ScoresPage() {
                       </span>
                     </div>
                     <p className="font-extrabold text-xs mt-2.5 leading-snug">{g.theme}</p>
-                    <div className="mt-2 flex items-center justify-between text-[10px]">
+                    <div className="mt-2.5 pt-2 border-t border-black/[0.06] flex items-center justify-between text-[10px]">
                       <span className="opacity-70 font-semibold">{teamCount} Teams</span>
-                      {isSelected && (
-                        <span className="h-2 w-2 rounded-full bg-[#35d07f] animate-pulse" />
+                      {isSelected ? (
+                        <span className="font-bold text-[#35d07f] flex items-center gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#35d07f] animate-pulse" />
+                          <span>Active (Unselect ✕)</span>
+                        </span>
+                      ) : (
+                        <span className="text-[#6d6178] opacity-60">Select →</span>
                       )}
                     </div>
                   </button>
@@ -443,7 +520,14 @@ export default function ScoresPage() {
                     <button
                       key={v.id}
                       type="button"
-                      onClick={() => setSelectedVenueId(v.id)}
+                      onClick={() => {
+                        setSelectedVenueId(v.id);
+                        if (v.groupName && v.groupName !== "null") {
+                          setSelectedGroupName(v.groupName);
+                        } else {
+                          setSelectedGroupName("");
+                        }
+                      }}
                       className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition flex items-center gap-1.5 ${
                         selectedVenueId === v.id
                           ? "bg-[#4b1d7a] text-[#e4b84a] shadow-xs"
