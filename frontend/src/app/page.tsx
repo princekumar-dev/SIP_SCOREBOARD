@@ -234,22 +234,15 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Podium Section */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-5 py-6">
-        <div className="mb-4 flex items-center gap-2.5 sm:gap-3 animate-fade-in-up">
-          <span className="text-xl sm:text-2xl">🏆</span>
-          <h2 className="display text-2xl sm:text-3xl font-bold">Current Podium Standings</h2>
-        </div>
-        <Podium rows={board.rows} />
-      </section>
-
-      {/* Leaderboard Section */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-5 py-8 sm:py-12">
+      {/* Live Podium & Leaderboard Section */}
+      <section className="mx-auto max-w-6xl px-4 sm:px-5 py-6 sm:py-8">
         <LiveLeaderboard
           title="Overall Live Ranking Matrix"
           initialRows={board.rows.slice(0, 15)}
           initialUpdated={board.lastUpdated}
           path="/api/leaderboard"
+          showPodium={true}
+          podiumTitle="Current Podium Standings"
         />
       </section>
     </div>

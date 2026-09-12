@@ -25,24 +25,15 @@ export default async function OverallPage() {
           </p>
         </div>
 
-        {/* Podium Standings */}
-        {topRows.length >= 3 && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🏆</span>
-              <h2 className="display text-2xl font-bold text-[#12071f]">Leaderboard Podium</h2>
-            </div>
-            <Podium rows={topRows} />
-          </div>
-        )}
-
-        {/* Full Leaderboard Table */}
-        <div className="animate-fade-in-up delay-2">
+        {/* Live Podium & Leaderboard Table */}
+        <div className="animate-fade-in-up delay-1">
           <LiveLeaderboard
             title={`Complete ${board.rows.length || 91}-Tribe Ranking`}
             initialRows={board.rows}
             initialUpdated={board.lastUpdated}
             path="/api/leaderboard"
+            showPodium={true}
+            podiumTitle="Leaderboard Podium"
           />
         </div>
       </div>

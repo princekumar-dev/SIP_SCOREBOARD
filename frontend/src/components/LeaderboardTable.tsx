@@ -167,7 +167,9 @@ export function LeaderboardTable({
 }
 
 export function Podium({ rows }: { rows: LeaderboardRow[] }) {
-  const scoredRows = rows.filter((r) => r.rank !== null && r.rank !== undefined && Number(r.totalScore) > 0);
+  const scoredRows = rows
+    .filter((r) => r && Number(r.totalScore) > 0)
+    .sort((a, b) => (a.rank || 999) - (b.rank || 999) || Number(b.totalScore) - Number(a.totalScore));
 
   if (scoredRows.length === 0) {
     return (
