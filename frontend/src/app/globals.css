@@ -142,14 +142,14 @@ a { color: inherit; text-decoration: none; }
   isolation: isolate;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.45s ease,
-              background 0.45s ease;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
 }
-.panel:hover {
-  transform: translateY(-6px) scale(1.008);
-  background: rgba(255, 252, 247, 0.82);
+
+/* Only interactive cards with .hover-lift or link panels lift on hover */
+a.panel:hover,
+.panel.hover-lift:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 252, 247, 0.85);
   box-shadow:
     0 4px 12px rgba(18, 7, 31, 0.04),
     0 16px 40px rgba(75, 29, 122, 0.08),

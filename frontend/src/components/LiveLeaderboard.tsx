@@ -55,15 +55,20 @@ export function LiveLeaderboard({
 
   return (
     <section className="space-y-4 animate-fade-in">
-      {title ? <h2 className="display text-3xl">{title}</h2> : null}
-      <div className="flex flex-wrap items-center gap-4">
-        <LiveBadge live={live} />
-        <span suppressHydrationWarning className="text-[11px] tracking-[0.14em] uppercase text-[#6d6178]">
-          Updated {mounted ? formatTime(updated) : "—"}
-        </span>
-        <Link href="/" className="ml-auto text-xs font-semibold text-[#4b1d7a] hover:text-[#e4b84a] transition-colors">
-          Exit
-        </Link>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-2">
+        <div>
+          <p className="text-[10px] tracking-[0.25em] text-[#4b1d7a] font-bold uppercase">Live Score Standings</p>
+          {title ? <h2 className="display text-2xl sm:text-3xl md:text-4xl mt-1 font-bold text-[#12071f]">{title}</h2> : null}
+        </div>
+        <div className="flex items-center gap-3">
+          <LiveBadge live={live} />
+          <span suppressHydrationWarning className="text-[11px] font-mono uppercase text-[#6d6178]">
+            Updated {mounted ? formatTime(updated) : "—"}
+          </span>
+          <Link href="/" className="ml-2 text-xs font-semibold text-[#4b1d7a] hover:text-[#e4b84a] transition-colors">
+            Exit
+          </Link>
+        </div>
       </div>
       <LeaderboardTable rows={rows} showVenue={showVenue} />
     </section>
