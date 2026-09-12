@@ -271,13 +271,14 @@ router.get("/tribes/:id", async (req, res) => {
   ]);
   const scoreMap = Object.fromEntries(scores.map((s) => [String(s.eventId), s]));
   const standing = overall.find((row) => row.id === String(tribe._id));
-  const venueBoard = tribe.venueId?._id ? await buildLeaderboard({ venueId: tribe.venueId._id }) : [];
-  const venueStanding = venueBoard.find((row) => row.id === String(tribe._id));
+  const groupBoard = tribe.groupName ? await buildLeaderboard({ groupName: tribe.groupName }) : [];
+  const groupStanding = groupBoard.find((row) => row.id === String(tribe._id));
 
   res.json({
     id: String(tribe._id),
     tribeCode: tribe.tribeCode,
     tribeName: tribe.tribeName,
+    groupName: tribe.groupName,
     theme: tribe.theme,
     status: tribe.status,
     venue: tribe.venueId
@@ -296,7 +297,8 @@ router.get("/tribes/:id", async (req, res) => {
           motif: "creative",
         },
     overallRank: standing?.rank || null,
-    venueRank: venueStanding?.rank || null,
+    groupRank: groupStanding?.rank || null,
+    venueRank: groupStanding?.rank || null,
     totalScore: standing?.totalScore !== undefined ? standing.totalScore : (await getTribeTotal(tribe._id)),
     events: events.map((event) => ({
       id: String(event._id),

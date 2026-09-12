@@ -54,7 +54,8 @@ export type TribeProfile = {
     motif: string;
   };
   overallRank: number | null;
-  venueRank: number | null;
+  groupRank?: number | null;
+  venueRank?: number | null;
   totalScore: number;
   events: { id: string; eventName: string; maximumScore: number; score: number | null; remarks: string }[];
   members: { id: string; name: string; department: string; classSection: string; isLeader?: boolean }[];

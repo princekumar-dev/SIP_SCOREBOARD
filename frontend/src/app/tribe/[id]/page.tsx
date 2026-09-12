@@ -21,7 +21,7 @@ export default async function TribePage({ params }: { params: Promise<{ id: stri
       <div className="mt-6 sm:mt-8 grid grid-cols-3 gap-2.5 sm:gap-4">
         {[
           ["Overall", rankLabel(tribe.overallRank)],
-          ["Venue", rankLabel(tribe.venueRank)],
+          ["Group Rank", rankLabel(tribe.groupRank !== undefined ? tribe.groupRank : tribe.venueRank)],
           ["Total", tribe.totalScore],
         ].map(([label, value], i) => (
           <div
@@ -92,7 +92,7 @@ export default async function TribePage({ params }: { params: Promise<{ id: stri
             return (
               <div
                 key={member.id}
-                className="panel p-3.5 sm:p-4 hover-lift animate-fade-in-up rounded-xl sm:rounded-2xl"
+                className="panel p-3.5 sm:p-4 hover-lift animate-fade-in-up rounded-xl sm:rounded-2xl h-full"
                 style={{ animationDelay: `${0.3 + i * 0.03}s` }}
               >
                 <p className="font-semibold text-sm sm:text-base text-[#12071f]">{member.name}</p>

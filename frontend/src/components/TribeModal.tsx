@@ -83,8 +83,8 @@ export function TribeModal({
                 <p className="display mt-1 sm:mt-2 text-xl sm:text-2xl font-bold text-[#e4b84a]">{rankLabel(data.overallRank)}</p>
               </div>
               <div className="rounded-xl sm:rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2.5 sm:p-4 text-center">
-                <p className="text-[8px] sm:text-[9px] tracking-[0.1em] sm:tracking-[0.18em] uppercase text-[#f7f1e6]/50 font-semibold truncate">Venue Rank</p>
-                <p className="display mt-1 sm:mt-2 text-xl sm:text-2xl font-bold text-[#f7f1e6]">{rankLabel(data.venueRank)}</p>
+                <p className="text-[8px] sm:text-[9px] tracking-[0.1em] sm:tracking-[0.18em] uppercase text-[#f7f1e6]/50 font-semibold truncate">Group Rank</p>
+                <p className="display mt-1 sm:mt-2 text-xl sm:text-2xl font-bold text-[#f7f1e6]">{rankLabel(data.groupRank !== undefined ? data.groupRank : data.venueRank)}</p>
               </div>
               <div className="rounded-xl sm:rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2.5 sm:p-4 text-center">
                 <p className="text-[8px] sm:text-[9px] tracking-[0.1em] sm:tracking-[0.18em] uppercase text-[#f7f1e6]/50 font-semibold truncate">Total Score</p>
