@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SOCKET_URL } from "@/lib/config";
-import { rankLabel } from "@/lib/format";
+import { rankLabel, formatMemberMeta } from "@/lib/format";
 import type { TribeProfile } from "@/lib/types";
 
 export function TribeModal({
@@ -123,7 +123,7 @@ export function TribeModal({
                   <div key={member.id} className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-3">
                     <p className="text-sm font-semibold text-white">{member.name}</p>
                     <p className="text-xs text-[#e4b84a]/70 mt-0.5">
-                      {member.department} · {member.classSection}
+                      {formatMemberMeta(member.department, member.classSection)}
                     </p>
                   </div>
                 ))}

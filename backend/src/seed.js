@@ -178,9 +178,7 @@ const LAST_NAMES = [
 const EVENTS = [
   { eventName: "Tear Down Lab", description: "Hands-on disassembly, component analysis and systems thinking.", maximumScore: 100 },
   { eventName: "Poster Presentation", description: "Visual storytelling and theme concept articulation.", maximumScore: 100 },
-  { eventName: "Career Quest", description: "Career path discovery and professional agility readiness.", maximumScore: 100 },
-  { eventName: "Sports", description: "Team synergy, athletic coordination and campus spirit.", maximumScore: 100 },
-  { eventName: "Valedictory", description: "Closing showcase, presentation excellence and overall presence.", maximumScore: 100 },
+  { eventName: "Problem Hunt", description: "Problem-solving challenge and critical thinking assessment.", maximumScore: 100 },
 ];
 
 

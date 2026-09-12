@@ -79,47 +79,41 @@ router.get("/scores/matrix", async (req, res) => {
   res.json({ tribes: items });
 });
 
-const GROUP_MAP = {
-  "Group I": { theme: "Creative & Design", motif: "creative", classes: ["AI & DS – A", "CSE – A", "Civil"] },
-  "Group II": { theme: "Technology & Innovation", motif: "tech", classes: ["Cyber Security", "AI & DS – B", "IT – A"] },
-  "Group III": { theme: "Space & Cosmic", motif: "space", classes: ["AI & ML", "IT – C", "EEE"] },
-  "Group IV": { theme: "Legends & Mythology", motif: "legend", classes: ["ECE – A", "CSE – B", "MECH"] },
-  "Group V": { theme: "Power & Energy", motif: "energy", classes: ["ECE – B", "CSE – C", "IT – B"] },
-};
+const { GROUP_MAP } = require("../constants/groups");
 
 async function ensureVenueGroupSync() {
-  const venues = await Venue.find().sort({ venueName: 1 }).lean();
-  if (venues.length === 5) {
-    const defaultGroupOrder = ["Group I", "Group II", "Group III", "Group IV", "Group V"];
-    const groupCount = {};
-    venues.forEach((v) => {
-      if (v.groupName) groupCount[v.groupName] = (groupCount[v.groupName] || 0) + 1;
-    });
-    const hasDuplicate = Object.values(groupCount).some((cnt) => cnt > 1);
-
-    if (hasDuplicate) {
-      for (let i = 0; i < venues.length; i++) {
-        const v = venues[i];
-        const gName = defaultGroupOrder[i];
-        if (gName && GROUP_MAP[gName]) {
-          await Venue.findByIdAndUpdate(v._id, {
-            groupName: gName,
-            theme: GROUP_MAP[gName].theme,
-            motif: GROUP_MAP[gName].motif,
-            participatingClasses: GROUP_MAP[gName].classes,
-          });
-          await Tribe.updateMany({ groupName: gName }, { $set: { venueId: v._id } });
-        }
-      }
-    } else {
-      for (const v of venues) {
-        if (v.groupName) {
-          await Tribe.updateMany({ groupName: v.groupName }, { $set: { venueId: v._id } });
-        }
-      }
+  const venues = await Venue.find().lean();
+  for (const v of venues) {
+    if (v.groupName && GROUP_MAP[v.groupName]) {
+      await Venue.findByIdAndUpdate(v._id, {
+        theme: GROUP_MAP[v.groupName].theme,
+        motif: GROUP_MAP[v.groupName].motif,
+        participatingClasses: GROUP_MAP[v.groupName].classes,
+        description: GROUP_MAP[v.groupName].description,
+      });
+      await Tribe.updateMany({ groupName: v.groupName }, { $set: { venueId: v._id } });
     }
   }
 }
+
+router.post("/venues/reset-allocations", requireRoles("super_admin"), async (req, res) => {
+  await Venue.updateMany(
+    {},
+    {
+      $set: {
+        groupName: null,
+        theme: "Pending Group Selection",
+        motif: "neutral",
+        participatingClasses: [],
+        description: "Waiting for venue host to select and activate the currently present group.",
+      },
+    }
+  );
+  await Tribe.updateMany({}, { $set: { venueId: null } });
+  broadcast(req, { kind: "venue-move" });
+  broadcast(req, { kind: "leaderboard" });
+  res.json({ ok: true, message: "All venue allocations reset to standby." });
+});
 
 router.put("/groups/assign-venue", async (req, res) => {
   const { groupName, venueId } = req.body || {};
@@ -133,25 +127,32 @@ router.put("/groups/assign-venue", async (req, res) => {
   const currentVenueOfGroup = await Venue.findOne({ groupName });
   const prevGroupAtTargetVenue = targetVenue.groupName;
 
-  // Perform clean 1-to-1 swap if another group is occupying target venue
-  if (
-    currentVenueOfGroup &&
-    String(currentVenueOfGroup._id) !== String(targetVenue._id) &&
-    prevGroupAtTargetVenue &&
-    prevGroupAtTargetVenue !== groupName
-  ) {
-    await Tribe.updateMany(
-      { groupName: prevGroupAtTargetVenue },
-      { $set: { venueId: currentVenueOfGroup._id } }
-    );
-    if (GROUP_MAP[prevGroupAtTargetVenue]) {
-      currentVenueOfGroup.groupName = prevGroupAtTargetVenue;
-      currentVenueOfGroup.theme = GROUP_MAP[prevGroupAtTargetVenue].theme;
-      currentVenueOfGroup.motif = GROUP_MAP[prevGroupAtTargetVenue].motif;
-      currentVenueOfGroup.participatingClasses = GROUP_MAP[prevGroupAtTargetVenue].classes;
+  // If another venue was hosting this group
+  if (currentVenueOfGroup && String(currentVenueOfGroup._id) !== String(targetVenue._id)) {
+    if (prevGroupAtTargetVenue && prevGroupAtTargetVenue !== groupName) {
+      // Clean 1-to-1 swap
+      await Tribe.updateMany(
+        { groupName: prevGroupAtTargetVenue },
+        { $set: { venueId: currentVenueOfGroup._id } }
+      );
+      if (GROUP_MAP[prevGroupAtTargetVenue]) {
+        currentVenueOfGroup.groupName = prevGroupAtTargetVenue;
+        currentVenueOfGroup.theme = GROUP_MAP[prevGroupAtTargetVenue].theme;
+        currentVenueOfGroup.motif = GROUP_MAP[prevGroupAtTargetVenue].motif;
+        currentVenueOfGroup.participatingClasses = GROUP_MAP[prevGroupAtTargetVenue].classes;
+        currentVenueOfGroup.description = GROUP_MAP[prevGroupAtTargetVenue].description;
+        await currentVenueOfGroup.save();
+      }
+    } else {
+      // The other venue is now left in standby
+      currentVenueOfGroup.groupName = null;
+      currentVenueOfGroup.theme = "Pending Group Selection";
+      currentVenueOfGroup.motif = "neutral";
+      currentVenueOfGroup.participatingClasses = [];
+      currentVenueOfGroup.description = "Waiting for venue host to select and activate the currently present group.";
       await currentVenueOfGroup.save();
     }
-    broadcast(req, { kind: "venue-move", groupName: prevGroupAtTargetVenue, venueId: String(currentVenueOfGroup._id) });
+    broadcast(req, { kind: "venue-move", venueId: String(currentVenueOfGroup._id) });
   }
 
   // Assign groupName to targetVenue
@@ -165,6 +166,7 @@ router.put("/groups/assign-venue", async (req, res) => {
     targetVenue.theme = GROUP_MAP[groupName].theme;
     targetVenue.motif = GROUP_MAP[groupName].motif;
     targetVenue.participatingClasses = GROUP_MAP[groupName].classes;
+    targetVenue.description = GROUP_MAP[groupName].description;
     await targetVenue.save();
   }
 

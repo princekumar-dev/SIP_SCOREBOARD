@@ -1,5 +1,5 @@
 import { apiGet } from "@/lib/api";
-import { rankLabel } from "@/lib/format";
+import { rankLabel, formatMemberMeta } from "@/lib/format";
 import type { TribeProfile } from "@/lib/types";
 
 export const revalidate = 30;
@@ -69,7 +69,7 @@ export default async function TribePage({ params }: { params: Promise<{ id: stri
             >
               <p className="font-semibold text-sm sm:text-base text-[#12071f]">{member.name}</p>
               <p className="text-xs sm:text-sm text-[#6d6178] mt-0.5">
-                {member.department} · {member.classSection}
+                {formatMemberMeta(member.department, member.classSection)}
               </p>
             </div>
           ))}

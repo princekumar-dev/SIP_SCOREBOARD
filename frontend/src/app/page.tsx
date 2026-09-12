@@ -201,43 +201,46 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="grid gap-3.5 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
-          {venues.map((venue, i) => (
-            <Link
-              key={venue.id}
-              href={`/venue/${venue.id}`}
-              className="panel p-4 sm:p-5 hover-lift animate-fade-in-up flex flex-col justify-between group relative overflow-hidden"
-              style={{ animationDelay: `${0.1 + i * 0.06}s` }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#4b1d7a]/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
-              <div className="relative">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] font-bold text-[#4b1d7a] bg-[#4b1d7a]/[0.08] px-2.5 py-1 rounded-lg border border-[#4b1d7a]/10">
-                    {venue.venueName}
-                  </span>
-                  <div className="relative flex items-center justify-center">
-                    <span className="live-dot" />
+          {venues.map((venue, i) => {
+            const isAllocated = Boolean(venue.groupName && venue.groupName !== "null");
+            return (
+              <Link
+                key={venue.id}
+                href={`/venue/${venue.id}`}
+                className="panel p-4 sm:p-5 hover-lift animate-fade-in-up flex flex-col justify-between group relative overflow-hidden"
+                style={{ animationDelay: `${0.1 + i * 0.06}s` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-[#4b1d7a]/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
+                <div className="relative">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] font-bold text-[#4b1d7a] bg-[#4b1d7a]/[0.08] px-2.5 py-1 rounded-lg border border-[#4b1d7a]/10">
+                      {venue.venueName}
+                    </span>
+                    <div className="relative flex items-center justify-center">
+                      {isAllocated ? <span className="live-dot" /> : <span className="h-2 w-2 rounded-full bg-amber-500" />}
+                    </div>
+                  </div>
+                  <p className="font-extrabold mt-3 text-base text-[#12071f] leading-snug">{venue.location || "Unallocated Hall"}</p>
+                  <p className="mt-1.5 text-xs text-[#6d6178] font-medium">{isAllocated ? venue.theme : "Pending Group Selection"}</p>
+                  <div className="mt-2.5">
+                    {isAllocated && venue.participatingClasses && venue.participatingClasses.length > 0 ? (
+                      <p className="text-[10px] text-[#4b1d7a]/80 font-semibold truncate">
+                        👥 {venue.participatingClasses.join(", ")}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-amber-700 font-medium">
+                        ⚠️ Classes Not Allocated
+                      </p>
+                    )}
                   </div>
                 </div>
-                <p className="font-extrabold mt-3 text-base text-[#12071f] leading-snug">{venue.location || "Unallocated Hall"}</p>
-                <p className="mt-1.5 text-xs text-[#6d6178] font-medium">{venue.theme || "Theme Unassigned"}</p>
-                <div className="mt-2.5">
-                  {venue.participatingClasses && venue.participatingClasses.length > 0 ? (
-                    <p className="text-[10px] text-[#4b1d7a]/80 font-semibold truncate">
-                      👥 {venue.participatingClasses.join(", ")}
-                    </p>
-                  ) : (
-                    <p className="text-[10px] text-amber-700 font-medium">
-                      ⚠️ Classes Not Allocated
-                    </p>
-                  )}
-                </div>
-              </div>
-              <p className="mt-4 text-xs font-bold text-[#4b1d7a] flex items-center justify-between relative border-t border-[#4b1d7a]/[0.08] pt-2.5">
-                <span>{venue.tribeCount} tribes</span>
-                <span className="transition-transform group-hover:translate-x-1">→</span>
-              </p>
-            </Link>
-          ))}
+                <p className="mt-4 text-xs font-bold text-[#4b1d7a] flex items-center justify-between relative border-t border-[#4b1d7a]/[0.08] pt-2.5">
+                  <span>{isAllocated ? `${venue.tribeCount} tribes` : "Standby"}</span>
+                  <span className="transition-transform group-hover:translate-x-1">→</span>
+                </p>
+              </Link>
+            );
+          })}
         </div>
       </section>
 

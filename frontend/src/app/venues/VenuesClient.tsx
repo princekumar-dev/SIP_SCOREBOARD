@@ -56,10 +56,11 @@ export function VenuesClient({ initialVenues }: { initialVenues: Venue[] }) {
       {/* Grid of 5 Venues */}
       <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {sortedVenues.map((venue, i) => {
-          const themeInfo = VENUE_THEME_MAP[venue.groupName] || {
-            cardClass: "group-card-1",
-            badgeClass: "bg-purple-500/10 text-purple-700 border-purple-400/30",
-            icon: "🏛️",
+          const isAllocated = Boolean(venue.groupName && venue.groupName !== "null");
+          const themeInfo = (isAllocated && VENUE_THEME_MAP[venue.groupName]) || {
+            cardClass: "bg-white/80 border border-black/10 hover:border-[#4b1d7a]/30 shadow-xs",
+            badgeClass: "bg-amber-500/10 text-amber-700 border-amber-400/30",
+            icon: "⏳",
           };
 
           return (
@@ -77,14 +78,21 @@ export function VenuesClient({ initialVenues }: { initialVenues: Venue[] }) {
                       {venue.venueName}
                     </span>
                     <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${themeInfo.badgeClass}`}>
-                      {themeInfo.icon} {venue.groupName || "Assigned"}
+                      {themeInfo.icon} {isAllocated ? venue.groupName : "Awaiting Selection"}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Live Arena
-                  </div>
+                  {isAllocated ? (
+                    <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Live Arena
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-700">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                      Standby
+                    </div>
+                  )}
                 </div>
 
                 {/* Hall Name & Domain */}
@@ -92,14 +100,16 @@ export function VenuesClient({ initialVenues }: { initialVenues: Venue[] }) {
                   {venue.location}
                 </h2>
                 <div className="mt-2.5">
-                  <span className="inline-block rounded-xl bg-[#12071f] px-3 py-1 text-xs font-bold text-[#e4b84a] tracking-wide shadow-xs">
-                    Theme: {venue.theme}
+                  <span className={`inline-block rounded-xl px-3 py-1 text-xs font-bold tracking-wide shadow-xs ${
+                    isAllocated ? "bg-[#12071f] text-[#e4b84a]" : "bg-amber-100/80 text-amber-900 border border-amber-300/40"
+                  }`}>
+                    Theme: {isAllocated ? venue.theme : "Pending Group Selection"}
                   </span>
                 </div>
 
                 {/* Description */}
                 <p className="mt-3 text-xs text-[#6d6178] line-clamp-2 leading-relaxed font-medium">
-                  {venue.description}
+                  {isAllocated ? venue.description : "Waiting for venue host to select and activate the currently present group."}
                 </p>
 
                 {/* Dynamically Updated Participating Classes */}
@@ -107,7 +117,7 @@ export function VenuesClient({ initialVenues }: { initialVenues: Venue[] }) {
                   <span className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-[#6d6178] block mb-2">
                     Participating Classes:
                   </span>
-                  {venue.participatingClasses && venue.participatingClasses.length > 0 ? (
+                  {isAllocated && venue.participatingClasses && venue.participatingClasses.length > 0 ? (
                     <div className="flex flex-wrap gap-1.5">
                       {venue.participatingClasses.map((cls) => (
                         <span
@@ -130,7 +140,7 @@ export function VenuesClient({ initialVenues }: { initialVenues: Venue[] }) {
               {/* Card Footer */}
               <div className="mt-6 pt-4 border-t border-black/[0.06] flex items-center justify-between text-xs">
                 <span className="font-extrabold text-[#12071f]">
-                  {venue.tribeCount} Competing Tribes
+                  {isAllocated ? `${venue.tribeCount} Competing Tribes` : "0 Competing Tribes (Standby)"}
                 </span>
                 <span className="font-extrabold text-[#4b1d7a] group-hover:translate-x-1 transition-transform flex items-center gap-1">
                   Enter Arena →

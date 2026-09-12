@@ -4,8 +4,9 @@ const Venue = require("../models/Venue");
 const Tribe = require("../models/Tribe");
 const Member = require("../models/Member");
 const Event = require("../models/Event");
-const Score = require("../models/Score");
-const { buildLeaderboard, getTribeTotal } = require("../utils/ranking");
+const { connectDb } = require("../db");
+const { buildLeaderboard } = require("../utils/ranking");
+const { GROUP_MAP } = require("../constants/groups");
 
 const router = express.Router();
 
@@ -72,28 +73,32 @@ async function getLeaderboardForIdentifier(param, res) {
     rows = await buildLeaderboard();
   }
 
+  const gInfo = venue?.groupName ? GROUP_MAP[venue.groupName] : (effectiveGroup ? GROUP_MAP[effectiveGroup] : null);
+
   return res.json({
     type: venue || effectiveGroup ? "venue" : "overall",
     venue: venue
       ? {
           id: String(venue._id),
           groupName: venue.groupName,
-          theme: venue.theme,
+          theme: gInfo?.theme || venue.theme,
           location: venue.location,
           venueName: venue.venueName,
-          participatingClasses: venue.participatingClasses || [],
-          motif: venue.motif,
+          participatingClasses: gInfo?.classes || venue.participatingClasses || [],
+          description: gInfo?.description || venue.description,
+          motif: gInfo?.motif || venue.motif,
           isAllocated: true,
         }
       : effectiveGroup
       ? {
           id: effectiveGroup,
           groupName: effectiveGroup,
-          theme: effectiveGroup,
+          theme: gInfo?.theme || effectiveGroup,
           location: "No Venue Allocated",
           venueName: "Unallocated",
-          participatingClasses: [],
-          motif: "creative",
+          participatingClasses: gInfo?.classes || [],
+          description: gInfo?.description || "",
+          motif: gInfo?.motif || "creative",
           isAllocated: false,
         }
       : null,
@@ -107,18 +112,25 @@ router.get("/venues", async (_req, res) => {
   const tribes = await Tribe.aggregate([{ $group: { _id: "$venueId", count: { $sum: 1 } } }]);
   const counts = Object.fromEntries(tribes.map((t) => [String(t._id), t.count]));
   res.json(
-    venues.map((venue) => ({
-      id: String(venue._id),
-      groupName: venue.groupName,
-      venueName: venue.venueName,
-      theme: venue.theme,
-      location: venue.location,
-      description: venue.description,
-      motif: venue.motif,
-      participatingClasses: venue.participatingClasses || [],
-      isLocked: venue.isLocked,
-      tribeCount: counts[String(venue._id)] || 0,
-    }))
+    venues.map((venue) => {
+      const isAllocated = Boolean(venue.groupName && GROUP_MAP[venue.groupName]);
+      const gInfo = isAllocated ? GROUP_MAP[venue.groupName] : null;
+      return {
+        id: String(venue._id),
+        groupName: isAllocated ? venue.groupName : null,
+        venueName: venue.venueName,
+        theme: isAllocated ? gInfo.theme : "Pending Group Selection",
+        location: venue.location,
+        description: isAllocated
+          ? gInfo.description
+          : "Waiting for venue host to select and activate the currently present group.",
+        motif: isAllocated ? gInfo.motif : "neutral",
+        participatingClasses: isAllocated ? gInfo.classes : [],
+        isLocked: venue.isLocked,
+        tribeCount: isAllocated ? (counts[String(venue._id)] || 0) : 0,
+        isAllocated,
+      };
+    })
   );
 });
 
@@ -131,18 +143,27 @@ router.get("/venues/:id", async (req, res) => {
     venue = await Venue.findOne({ groupName: req.params.id }).lean();
   }
   if (!venue) return res.status(404).json({ error: "Venue not found." });
-  const leaderboard = await buildLeaderboard({ venueId: venue._id, groupName: venue.groupName });
+
+  const isAllocated = Boolean(venue.groupName && GROUP_MAP[venue.groupName]);
+  const gInfo = isAllocated ? GROUP_MAP[venue.groupName] : null;
+  const leaderboard = isAllocated
+    ? await buildLeaderboard({ venueId: venue._id, groupName: venue.groupName })
+    : [];
+
   res.json({
     id: String(venue._id),
-    groupName: venue.groupName,
+    groupName: isAllocated ? venue.groupName : null,
     venueName: venue.venueName,
-    theme: venue.theme,
+    theme: isAllocated ? gInfo.theme : "Pending Group Selection",
     location: venue.location,
-    description: venue.description,
-    motif: venue.motif,
-    participatingClasses: venue.participatingClasses || [],
+    description: isAllocated
+      ? gInfo.description
+      : "Waiting for venue host to select and activate the currently present group.",
+    motif: isAllocated ? gInfo.motif : "neutral",
+    participatingClasses: isAllocated ? gInfo.classes : [],
     isLocked: venue.isLocked,
     tribeCount: leaderboard.length,
+    isAllocated,
     lastUpdated: new Date().toISOString(),
     leaderboard,
   });

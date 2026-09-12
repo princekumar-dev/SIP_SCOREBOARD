@@ -82,10 +82,8 @@ export default function ScoresPage() {
         const initialVenueId = user.venueId || (vList[0] ? vList[0].id : "");
         setSelectedVenueId(initialVenueId);
 
-        // Pre-select the venue's active group (e.g. Group II for ECE Seminar Hall)
-        const userVenue = vList.find((v) => v.id === initialVenueId);
-        const initialGroup = user.venue?.groupName || userVenue?.groupName || "Group I";
-        setSelectedGroupName(initialGroup);
+        // DO NOT pre-select any group by default! Host/Admin must pick the present group.
+        setSelectedGroupName("");
 
         if (eList[0]) {
           setSelectedEventId(eList[0].id);
@@ -164,23 +162,24 @@ export default function ScoresPage() {
   }, [venues]);
 
   const activeGroup = useMemo(
-    () => groupsFromVenues.find((g) => g.groupName === selectedGroupName) || groupsFromVenues[0] || { groupName: "Group I", theme: "Creative & Design", icon: "🎨" },
+    () => (selectedGroupName ? groupsFromVenues.find((g) => g.groupName === selectedGroupName) || null : null),
     [selectedGroupName, groupsFromVenues]
   );
 
   // Assign/rotate selected group to the selected venue hall
-  async function assignGroupToVenue() {
-    if (!selectedGroupName || !selectedVenueId) return;
+  async function assignGroupToVenue(groupToAssign?: string) {
+    const targetGroup = groupToAssign || selectedGroupName;
+    if (!targetGroup || !selectedVenueId) return;
     setRotating(true);
     setGlobalError("");
     setGlobalMessage("");
     try {
       const res = await apiSend<any>("/api/admin/groups/assign-venue", getToken(), "PUT", {
-        groupName: selectedGroupName,
+        groupName: targetGroup,
         venueId: selectedVenueId,
-        reason: `Rotated ${selectedGroupName} into ${activeVenue?.location || "Venue"}`,
+        reason: `Host activated ${targetGroup} into ${activeVenue?.location || "Venue"}`,
       });
-      setGlobalMessage(`✓ ${selectedGroupName} (${res.updatedCount} tribes) is now actively hosted in ${res.venueLocation}!`);
+      setGlobalMessage(`✓ ${targetGroup} (${res.updatedCount || 18} tribes) is now actively hosted in ${res.venueLocation}!`);
       setTribeRows((prev) =>
         prev.map((r) => ({ ...r, currentVenue: res.venueLocation }))
       );
@@ -190,13 +189,13 @@ export default function ScoresPage() {
         setVenues(freshVenues);
       } catch {
         setVenues((prev) =>
-          prev.map((v) => (v.id === selectedVenueId ? { ...v, groupName: selectedGroupName } : v))
+          prev.map((v) => (v.id === selectedVenueId ? { ...v, groupName: targetGroup } : v))
         );
       }
       if (currentUser && currentUser.venue) {
         setCurrentUser((prev: any) => ({
           ...prev,
-          venue: { ...prev.venue, groupName: selectedGroupName },
+          venue: { ...prev.venue, groupName: targetGroup },
         }));
       }
     } catch (err: any) {
@@ -204,6 +203,11 @@ export default function ScoresPage() {
     } finally {
       setRotating(false);
     }
+  }
+
+  function handleSelectGroup(groupName: string) {
+    setSelectedGroupName(groupName);
+    assignGroupToVenue(groupName);
   }
 
   // Save single tribe score
@@ -306,27 +310,35 @@ export default function ScoresPage() {
               <span className="text-xs text-[#6d6178] font-medium">Real-time Score Management</span>
             </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#12071f] tracking-tight mt-1">
-              {selectedGroupName}: {activeGroup.theme}
+              {selectedGroupName && activeGroup ? `${selectedGroupName}: ${activeGroup.theme}` : "Live Score Entry"}
             </h1>
             <p className="text-xs text-[#6d6178] mt-0.5">
-              Host Location: <strong className="text-[#4b1d7a]">{activeVenue?.location || "No Venue Allocated"}</strong> · 18 Competing Teams
+              Host Location: <strong className="text-[#4b1d7a]">{activeVenue?.location || "No Venue Allocated"}</strong>
+              {selectedGroupName ? ` · 18 Competing Teams` : " · Please select a group below to start scoring"}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
-            <Link
-              href={`/scoreboard?group=${encodeURIComponent(selectedGroupName)}${selectedVenueId ? `&venue=${encodeURIComponent(selectedVenueId)}` : activeVenue?.id ? `&venue=${encodeURIComponent(activeVenue.id)}` : ""}`}
-              target="_blank"
-              className="rounded-xl border border-[#4b1d7a]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#4b1d7a] shadow-sm hover:bg-[#4b1d7a]/5 transition flex items-center justify-center gap-1.5 text-center"
-            >
-              <span>📺</span>
-              <span>Projector ({selectedGroupName})</span>
-            </Link>
+            {selectedGroupName ? (
+              <Link
+                href={`/scoreboard?group=${encodeURIComponent(selectedGroupName)}${selectedVenueId ? `&venue=${encodeURIComponent(selectedVenueId)}` : activeVenue?.id ? `&venue=${encodeURIComponent(activeVenue.id)}` : ""}`}
+                target="_blank"
+                className="rounded-xl border border-[#4b1d7a]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#4b1d7a] shadow-sm hover:bg-[#4b1d7a]/5 transition flex items-center justify-center gap-1.5 text-center"
+              >
+                <span>📺</span>
+                <span>Projector ({selectedGroupName})</span>
+              </Link>
+            ) : (
+              <span className="rounded-xl border border-dashed border-[#4b1d7a]/20 bg-white/50 px-4 py-2.5 text-xs font-bold text-[#6d6178]/60 flex items-center justify-center gap-1.5 cursor-not-allowed">
+                <span>📺</span>
+                <span>Projector</span>
+              </span>
+            )}
 
             <button
               type="button"
               onClick={saveAllScores}
-              disabled={savingAll || tribeRows.length === 0}
+              disabled={savingAll || tribeRows.length === 0 || !selectedGroupName}
               className="rounded-xl bg-gradient-to-r from-[#4b1d7a] to-[#301250] px-5 py-2.5 text-xs font-bold text-[#e4b84a] shadow-md hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-center"
             >
               {savingAll ? (
@@ -334,7 +346,7 @@ export default function ScoresPage() {
               ) : (
                 <span>💾</span>
               )}
-              <span>Save All 18 Scores</span>
+              <span>Save All {tribeRows.length > 0 ? `${tribeRows.length} ` : ""}Scores</span>
             </button>
           </div>
         </div>
@@ -381,7 +393,7 @@ export default function ScoresPage() {
                   <button
                     key={g.groupName}
                     type="button"
-                    onClick={() => setSelectedGroupName(g.groupName)}
+                    onClick={() => handleSelectGroup(g.groupName)}
                     className={`rounded-2xl p-4 text-left transition-all duration-300 border flex flex-col justify-between cursor-pointer hover-lift ${
                       isSelected
                         ? groupSelectedStyle
@@ -417,7 +429,7 @@ export default function ScoresPage() {
                   </label>
                   <button
                     type="button"
-                    onClick={assignGroupToVenue}
+                    onClick={() => assignGroupToVenue()}
                     disabled={rotating}
                     className="rounded-full border border-[#4b1d7a]/30 bg-white px-3 py-1 text-[11px] font-bold text-[#4b1d7a] hover:bg-[#4b1d7a] hover:text-white transition disabled:opacity-50 shadow-xs"
                   >
@@ -462,11 +474,15 @@ export default function ScoresPage() {
 
                 <button
                   type="button"
-                  onClick={assignGroupToVenue}
-                  disabled={rotating || !activeVenue}
-                  className="rounded-full border border-[#4b1d7a]/30 bg-white px-3.5 py-1.5 text-xs font-bold text-[#4b1d7a] hover:bg-[#4b1d7a] hover:text-white transition disabled:opacity-50 shadow-xs"
+                  onClick={() => assignGroupToVenue()}
+                  disabled={rotating || !activeVenue || !selectedGroupName}
+                  className="rounded-full border border-[#4b1d7a]/30 bg-white px-3.5 py-1.5 text-xs font-bold text-[#4b1d7a] hover:bg-[#4b1d7a] hover:text-white transition disabled:opacity-50 shadow-xs cursor-pointer"
                 >
-                  {rotating ? "Updating…" : `📍 Set ${selectedGroupName} Active in ${activeVenue?.location?.split(" ")[0] || "this Hall"}`}
+                  {rotating
+                    ? "Updating…"
+                    : selectedGroupName
+                    ? `📍 Set ${selectedGroupName} Active in ${activeVenue?.location?.split(" ")[0] || "this Hall"}`
+                    : "📍 Select a group first"}
                 </button>
               </div>
             )}
@@ -516,19 +532,29 @@ export default function ScoresPage() {
           <div className="border-b border-[#4b1d7a]/10 bg-[#4b1d7a]/5 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-base sm:text-lg font-bold text-[#12071f]">
-                {selectedGroupName}: {activeGroup.theme} · 18 Teams Matrix
+                {selectedGroupName && activeGroup
+                  ? `${selectedGroupName}: ${activeGroup.theme} · 18 Teams Matrix`
+                  : "Team Evaluation Matrix"}
               </h2>
               <p className="text-xs text-[#6d6178]">
                 Evaluating Event: <strong className="text-[#4b1d7a]">{activeEvent?.eventName || "No event selected"}</strong> {activeEvent ? `(0 to ${activeEvent.maximumScore} points)` : ""}
               </p>
             </div>
-            <span className="rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-[11px] font-bold text-emerald-800 flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Live Sync Active</span>
-            </span>
+            {selectedGroupName ? (
+              <span className="rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-[11px] font-bold text-emerald-800 flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Live Sync Active</span>
+              </span>
+            ) : null}
           </div>
 
-          {events.length === 0 ? (
+          {!selectedGroupName ? (
+            <div className="py-20 text-center text-sm text-[#6d6178] animate-fade-in">
+              <span className="text-4xl block mb-3">🎯</span>
+              <p className="font-bold text-base text-[#12071f]">No Group Selected</p>
+              <p className="text-xs text-[#6d6178] mt-1">Please select which group is currently present in your venue hall in Step 1 above to load teams and enter scores.</p>
+            </div>
+          ) : events.length === 0 ? (
             <div className="py-20 text-center text-sm text-[#6d6178]">
               <span className="text-3xl block mb-2">⚡</span>
               <p className="font-bold text-base text-[#12071f]">No Scoring Events Created Yet</p>
