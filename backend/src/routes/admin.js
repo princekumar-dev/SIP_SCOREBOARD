@@ -79,6 +79,117 @@ router.get("/scores/matrix", async (req, res) => {
   res.json({ tribes: items });
 });
 
+// Comprehensive Master Export Data (Tribes + Members + Leads + All Event Scores + Ranks)
+router.get("/export/master-data", async (req, res) => {
+  try {
+    const [tribes, events, venues, scores, members] = await Promise.all([
+      Tribe.find({ status: "active" }).populate("venueId").sort({ tribeCode: 1 }).lean(),
+      Event.find({ status: "active" }).sort({ createdAt: 1 }).lean(),
+      Venue.find().lean(),
+      Score.find().populate("enteredBy", "name").lean(),
+      Member.find().lean(),
+    ]);
+
+    // Build venue map
+    const venueMap = new Map(venues.map((v) => [String(v._id), v]));
+    const groupToVenueMap = new Map();
+    for (const v of venues) {
+      if (v.groupName) groupToVenueMap.set(v.groupName.toLowerCase(), v);
+    }
+
+    // Group members by tribeId
+    const membersByTribe = new Map();
+    for (const m of members) {
+      const tid = String(m.tribeId);
+      if (!membersByTribe.has(tid)) membersByTribe.set(tid, []);
+      membersByTribe.get(tid).push(m);
+    }
+
+    // Group scores by tribeId -> eventId
+    const scoresByTribeEvent = new Map();
+    const tribeTotals = new Map();
+    for (const s of scores) {
+      const tid = String(s.tribeId);
+      const eid = String(s.eventId);
+      if (!scoresByTribeEvent.has(tid)) scoresByTribeEvent.set(tid, new Map());
+      scoresByTribeEvent.get(tid).set(eid, s);
+
+      tribeTotals.set(tid, (tribeTotals.get(tid) || 0) + Number(s.score || 0));
+    }
+
+    // Build master tribe rows
+    const { GROUP_MAP } = require("../constants/groups");
+    const formattedTribes = tribes.map((t) => {
+      const tid = String(t._id);
+      const tMembers = membersByTribe.get(tid) || [];
+      const leader = tMembers.find((m) => m.isLeader) || tMembers[0] || null;
+      const gInfo = t.groupName ? GROUP_MAP[t.groupName] : null;
+      const assignedVenue = t.venueId || (t.groupName ? groupToVenueMap.get(t.groupName.toLowerCase()) : null);
+
+      const eventScores = events.map((ev) => {
+        const sObj = scoresByTribeEvent.get(tid)?.get(String(ev._id));
+        return {
+          eventId: String(ev._id),
+          eventName: ev.eventName,
+          maximumScore: ev.maximumScore,
+          score: sObj ? sObj.score : null,
+          remarks: sObj ? sObj.remarks : "",
+          enteredBy: sObj?.enteredBy?.name || "",
+        };
+      });
+
+      const totalScore = tribeTotals.get(tid) || 0;
+
+      return {
+        id: tid,
+        tribeCode: t.tribeCode,
+        tribeName: t.tribeName,
+        groupName: t.groupName || "",
+        theme: t.theme || gInfo?.theme || assignedVenue?.theme || "",
+        venueLocation: assignedVenue?.location || "No Venue Allocated",
+        venueName: assignedVenue?.venueName || "",
+        leader: leader ? { name: leader.name, department: leader.department || "", classSection: leader.classSection || "" } : null,
+        memberCount: tMembers.length,
+        members: tMembers.map((m) => ({
+          name: m.name,
+          department: m.department || "",
+          classSection: m.classSection || "",
+          isLeader: Boolean(m.isLeader),
+        })),
+        eventScores,
+        totalScore,
+      };
+    });
+
+    // Compute ranks
+    const sorted = [...formattedTribes].sort((a, b) => b.totalScore - a.totalScore || a.tribeCode.localeCompare(b.tribeCode));
+    let currentRank = 0;
+    let prevScore = null;
+    const rankedTribes = sorted.map((row, idx) => {
+      if (row.totalScore > 0) {
+        if (row.totalScore !== prevScore) {
+          currentRank = idx + 1;
+          prevScore = row.totalScore;
+        }
+        return { ...row, rank: currentRank };
+      }
+      return { ...row, rank: null };
+    });
+
+    // Re-sort back to tribeCode natural order for convenient lookup
+    rankedTribes.sort((a, b) => a.tribeCode.localeCompare(b.tribeCode));
+
+    res.json({
+      timestamp: new Date().toISOString(),
+      events: events.map((e) => ({ id: String(e._id), eventName: e.eventName, maximumScore: e.maximumScore })),
+      tribes: rankedTribes,
+    });
+  } catch (err) {
+    console.error("Master export error:", err);
+    res.status(500).json({ error: "Failed to build master export data." });
+  }
+});
+
 const { GROUP_MAP } = require("../constants/groups");
 
 async function ensureVenueGroupSync() {

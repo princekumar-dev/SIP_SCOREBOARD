@@ -6,6 +6,7 @@ import { AdminShell } from "@/components/AdminShell";
 import { apiGet, apiSend } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import type { Venue } from "@/lib/types";
+import { downloadOfflineScoreTemplate, type MasterExportData } from "@/lib/exportUtils";
 
 type EventItem = {
   id: string;
@@ -57,6 +58,7 @@ export default function ScoresPage() {
   const [savingTribeId, setSavingTribeId] = useState<string | null>(null);
   const [savingAll, setSavingAll] = useState(false);
   const [rotating, setRotating] = useState(false);
+  const [exportingTemplate, setExportingTemplate] = useState(false);
   const [savedSuccessMap, setSavedSuccessMap] = useState<{ [tribeId: string]: boolean }>({});
   const [globalMessage, setGlobalMessage] = useState("");
   const [globalError, setGlobalError] = useState("");
@@ -89,7 +91,7 @@ export default function ScoresPage() {
         if (existingGroup) {
           setSelectedGroupName(existingGroup);
         } else {
-          setSelectedGroupName("");
+          setSelectedGroupName(user.role === "super_admin" ? "Group I" : "");
         }
 
         if (eList[0]) {
@@ -266,11 +268,28 @@ export default function ScoresPage() {
 
   async function handleSelectGroup(groupName: string) {
     if (selectedGroupName === groupName) {
-      // Toggle OFF: Click again on active group to unselect
+      if (currentUser?.role === "super_admin") {
+        return; // Super admin keeps browsing
+      }
       await unassignGroupFromVenue();
     } else {
       setSelectedGroupName(groupName);
-      await assignGroupToVenue(groupName);
+      if (currentUser?.role !== "super_admin") {
+        await assignGroupToVenue(groupName);
+      }
+    }
+  }
+
+  // Download offline score template for current group or all groups
+  async function handleDownloadTemplate() {
+    setExportingTemplate(true);
+    try {
+      const masterData = await apiSend<MasterExportData>("/api/admin/export/master-data", getToken(), "GET");
+      downloadOfflineScoreTemplate(masterData, selectedGroupName || undefined);
+    } catch {
+      setGlobalError("Could not download scoring template.");
+    } finally {
+      setExportingTemplate(false);
     }
   }
 
@@ -321,7 +340,7 @@ export default function ScoresPage() {
         setSavedSuccessMap((prev) => ({ ...prev, [tribeId]: false }));
       }, 2500);
 
-      setGlobalMessage(`Saved score (${num} pts). New total: ${result.totalScore} pts.`);
+      setGlobalMessage(`✓ Score for tribe updated successfully!`);
     } catch (err: any) {
       setGlobalError(err.message || "Failed to save score.");
     } finally {
@@ -329,101 +348,134 @@ export default function ScoresPage() {
     }
   }
 
-  // Save all entered scores
+  // Bulk Save all entered scores
   async function saveAllScores() {
-    setSavingAll(true);
-    setGlobalError("");
-    setGlobalMessage("");
-    let savedCount = 0;
+    const enteredEntries: { tribeId: string; score: number; remarks: string }[] = [];
 
-    for (const row of tribeRows) {
-      const raw = scoresInput[row.tribeId];
-      if (raw !== undefined && raw.trim() !== "") {
-        const num = Number(raw);
-        if (!Number.isNaN(num) && num >= 0 && (!activeEvent || num <= activeEvent.maximumScore)) {
-          try {
-            await apiSend("/api/admin/scores", getToken(), "POST", {
-              tribeId: row.tribeId,
-              eventId: selectedEventId,
-              score: num,
-              remarks: remarksInput[row.tribeId] || "",
-              reason: "Batch live scoring",
-            });
-            savedCount += 1;
-          } catch {
-            // continue
-          }
+    for (const tribe of tribeRows) {
+      const val = scoresInput[tribe.tribeId];
+      if (val !== undefined && val.trim() !== "") {
+        const num = Number(val);
+        if (Number.isNaN(num) || num < 0 || (activeEvent && num > activeEvent.maximumScore)) {
+          setGlobalError(`Invalid score for ${tribe.tribeCode} (${tribe.tribeName}). Must be between 0 and ${activeEvent?.maximumScore || 100}.`);
+          return;
         }
+        enteredEntries.push({
+          tribeId: tribe.tribeId,
+          score: num,
+          remarks: remarksInput[tribe.tribeId] || "",
+        });
       }
     }
 
-    setSavingAll(false);
-    setGlobalMessage(`Successfully saved scores for ${savedCount} teams! Live scores updated across all screens.`);
+    if (enteredEntries.length === 0) {
+      setGlobalError("No score inputs found to save. Please enter scores first.");
+      return;
+    }
+
+    setSavingAll(true);
+    setGlobalError("");
+    setGlobalMessage("");
+
+    try {
+      const token = getToken();
+      await Promise.all(
+        enteredEntries.map((e) =>
+          apiSend("/api/admin/scores", token, "POST", {
+            tribeId: e.tribeId,
+            eventId: selectedEventId,
+            score: e.score,
+            remarks: e.remarks,
+            reason: `Bulk live scoring for ${activeEvent?.eventName || "Event"}`,
+          })
+        )
+      );
+
+      // Re-fetch updated score matrix
+      const refreshed = await apiSend<{ tribes: TribeScoreRow[] }>(
+        `/api/admin/scores/matrix?groupName=${encodeURIComponent(selectedGroupName)}&eventId=${selectedEventId}`,
+        token,
+        "GET"
+      );
+      setTribeRows(refreshed.tribes || []);
+
+      const newSuccessMap: { [key: string]: boolean } = {};
+      enteredEntries.forEach((e) => (newSuccessMap[e.tribeId] = true));
+      setSavedSuccessMap(newSuccessMap);
+      setTimeout(() => setSavedSuccessMap({}), 3000);
+
+      setGlobalMessage(`🎉 All ${enteredEntries.length} scores for ${activeEvent?.eventName || "Event"} saved successfully!`);
+    } catch (err: any) {
+      setGlobalError(err.message || "Error saving scores. Please check inputs.");
+    } finally {
+      setSavingAll(false);
+    }
   }
 
   return (
     <AdminShell>
-      <div className="space-y-6 max-w-6xl mx-auto">
-        {/* Header & Main Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#4b1d7a]/10 pb-5">
+      <div className="space-y-6 max-w-7xl mx-auto">
+        {/* Top Header Card */}
+        <div className="rounded-3xl border border-[#4b1d7a]/20 bg-gradient-to-r from-[#ffffff] via-[#fdfbf7] to-[#fbf7ee] p-5 sm:p-6 md:p-7 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-[#12071f] px-3 py-0.5 text-[11px] font-bold text-[#e4b84a]">
-                {currentUser?.role === "super_admin" ? "👑 Super Admin" : "🏛️ Venue Host"}
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <span className="rounded-full bg-[#4b1d7a] px-3 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider text-white">
+                {currentUser?.role === "super_admin" ? "👑 Master Score Portal" : "🏛️ Venue Evaluation Station"}
               </span>
-              <span className="text-xs text-[#6d6178] font-medium">Real-time Score Management</span>
+              <span className="text-xs font-bold text-[#4b1d7a]">
+                📍 {activeVenue?.location || "No Venue Allocated"}
+              </span>
+              {selectedGroupName && (
+                <span className="rounded-md bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                  {selectedGroupName} Active
+                </span>
+              )}
             </div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#12071f] tracking-tight mt-1">
-              {selectedGroupName && activeGroup ? `${selectedGroupName}: ${activeGroup.theme}` : "Live Score Entry"}
+            <h1 className="text-2xl sm:text-3xl font-black text-[#12071f] tracking-tight">
+              {selectedGroupName ? `${selectedGroupName}: ${activeGroup?.theme || "Evaluation"}` : "Score Entry"}
             </h1>
-            <p className="text-xs text-[#6d6178] mt-0.5">
-              Host Location: <strong className="text-[#4b1d7a]">{activeVenue?.location || "No Venue Allocated"}</strong>
-              {selectedGroupName ? ` · ${tribeRows.length} Competing Teams` : " · Please select a group below to start scoring"}
+            <p className="text-xs text-[#6d6178] mt-1 font-medium">
+              {activeEvent ? `Evaluating: ${activeEvent.eventName} (Max ${activeEvent.maximumScore} pts)` : "Select event below to begin evaluation"}
+              {selectedGroupName ? ` · ${tribeRows.length} Competing Tribes` : ""}
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
-            {selectedGroupName ? (
-              <>
-                <button
-                  type="button"
-                  onClick={unassignGroupFromVenue}
-                  disabled={rotating}
-                  className="rounded-xl border border-red-300 bg-red-50/80 px-3.5 py-2.5 text-xs font-bold text-red-700 hover:bg-red-100 hover:border-red-400 transition flex items-center justify-center gap-1.5 cursor-pointer"
-                  title="Unselect current group and return venue to Standby"
-                >
-                  <span>✕</span>
-                  <span>Unselect {selectedGroupName}</span>
-                </button>
+          {/* Top Quick Actions */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+            <button
+              type="button"
+              onClick={handleDownloadTemplate}
+              disabled={exportingTemplate}
+              className="rounded-xl border border-[#4b1d7a]/20 bg-white px-3.5 py-2.5 text-xs font-bold text-[#4b1d7a] shadow-xs hover:bg-[#4b1d7a]/5 transition flex items-center gap-1.5 cursor-pointer"
+              title="Download blank template to fill scores offline"
+            >
+              <span>📥</span>
+              <span>{exportingTemplate ? "Preparing…" : "Offline Template"}</span>
+            </button>
 
-                <Link
-                  href={`/scoreboard?group=${encodeURIComponent(selectedGroupName)}${selectedVenueId ? `&venue=${encodeURIComponent(selectedVenueId)}` : activeVenue?.id ? `&venue=${encodeURIComponent(activeVenue.id)}` : ""}&station=true`}
-                  target="_blank"
-                  className="rounded-xl border border-[#4b1d7a]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#4b1d7a] shadow-sm hover:bg-[#4b1d7a]/5 transition flex items-center justify-center gap-1.5 text-center"
-                >
-                  <span>📺</span>
-                  <span>Projector ({selectedGroupName})</span>
-                </Link>
-              </>
-            ) : (
-              <span className="rounded-xl border border-dashed border-[#4b1d7a]/20 bg-white/50 px-4 py-2.5 text-xs font-bold text-[#6d6178]/60 flex items-center justify-center gap-1.5 cursor-not-allowed">
+            {selectedGroupName && (
+              <Link
+                href={`/scoreboard?group=${encodeURIComponent(selectedGroupName)}${selectedVenueId ? `&venue=${encodeURIComponent(selectedVenueId)}` : ""}&station=true`}
+                target="_blank"
+                className="rounded-xl border border-[#4b1d7a]/20 bg-white px-3.5 py-2.5 text-xs font-bold text-[#4b1d7a] shadow-xs hover:bg-[#4b1d7a]/5 transition flex items-center gap-1.5"
+              >
                 <span>📺</span>
                 <span>Projector</span>
-              </span>
+              </Link>
             )}
 
             <button
               type="button"
               onClick={saveAllScores}
               disabled={savingAll || tribeRows.length === 0 || !selectedGroupName}
-              className="rounded-xl bg-gradient-to-r from-[#4b1d7a] to-[#301250] px-5 py-2.5 text-xs font-bold text-[#e4b84a] shadow-md hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-center"
+              className="rounded-xl bg-gradient-to-r from-[#4b1d7a] to-[#301250] px-5 py-2.5 text-xs font-bold text-[#e4b84a] shadow-md hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
             >
               {savingAll ? (
                 <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#e4b84a] border-t-transparent" />
               ) : (
                 <span>💾</span>
               )}
-              <span>Save All {tribeRows.length > 0 ? `${tribeRows.length} ` : ""}Scores</span>
+              <span>Save All Scores</span>
             </button>
           </div>
         </div>
@@ -442,106 +494,51 @@ export default function ScoresPage() {
           </div>
         )}
 
-        {/* Dynamic Controls Card */}
-        <div className="rounded-3xl border border-[#4b1d7a]/15 bg-white/90 p-5 md:p-6 shadow-sm backdrop-blur-md space-y-5">
-          {/* Step 1: Group Selector */}
+        {/* Clean Selector Panel: Group & Event */}
+        <div className="rounded-3xl border border-[#4b1d7a]/15 bg-white/90 p-5 md:p-6 shadow-sm backdrop-blur-md space-y-4">
+          {/* Group Selector */}
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
               <label className="text-xs font-bold uppercase tracking-wider text-[#4b1d7a]">
-                1. Select Present Group to Score:
+                1. Select Competing Group:
               </label>
-              <div className="flex items-center gap-2">
-                {selectedGroupName && (
-                  <button
-                    type="button"
-                    onClick={unassignGroupFromVenue}
-                    disabled={rotating}
-                    className="rounded-lg border border-red-300 bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-700 hover:bg-red-100 transition cursor-pointer flex items-center gap-1"
-                  >
-                    <span>✕</span>
-                    <span>Unselect {selectedGroupName} (Set to Standby)</span>
-                  </button>
-                )}
-                <span className="text-[11px] text-[#6d6178]">Click a card to select / click again to unselect</span>
-              </div>
+              <span className="text-[11px] text-[#6d6178]">
+                {currentUser?.role === "super_admin" ? "Switch between 5 groups" : "Select or rotate group in your hall"}
+              </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-              {groupsFromVenues.map((g, idx) => {
-                const hostingVenue = g.hostingVenue;
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+              {groupsFromVenues.map((g) => {
                 const isSelected = selectedGroupName === g.groupName;
-                const isAtCurrentVenue = isSelected || (hostingVenue && hostingVenue.id === selectedVenueId);
-                const isAtOtherVenue = !isAtCurrentVenue && Boolean(hostingVenue);
-
-                const groupSelectedStyle =
-                  idx === 0
-                    ? "bg-gradient-to-br from-[#12071f] via-[#2d0a1b] to-[#12071f] text-white border-rose-400 ring-2 ring-rose-400/40 shadow-lg shadow-rose-900/30"
-                    : idx === 1
-                    ? "bg-gradient-to-br from-[#12071f] via-[#082032] to-[#12071f] text-white border-cyan-400 ring-2 ring-cyan-400/40 shadow-lg shadow-cyan-900/30"
-                    : idx === 2
-                    ? "bg-gradient-to-br from-[#12071f] via-[#260c38] to-[#12071f] text-white border-purple-400 ring-2 ring-purple-400/40 shadow-lg shadow-purple-900/30"
-                    : idx === 3
-                    ? "bg-gradient-to-br from-[#12071f] via-[#2d2208] to-[#12071f] text-white border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-amber-900/30"
-                    : "bg-gradient-to-br from-[#12071f] via-[#331405] to-[#12071f] text-white border-orange-400 ring-2 ring-orange-400/40 shadow-lg shadow-orange-900/30";
-
-                const teamCount = g.groupName === "Group V" ? 19 : 18;
-
+                const hostingVenue = g.hostingVenue;
                 return (
                   <button
                     key={g.groupName}
                     type="button"
                     onClick={() => handleSelectGroup(g.groupName)}
-                    className={`rounded-2xl p-4 text-left transition-all duration-300 border flex flex-col justify-between cursor-pointer hover-lift relative ${
-                      isAtCurrentVenue
-                        ? groupSelectedStyle
-                        : isAtOtherVenue
-                        ? "bg-white/95 text-[#12071f] border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50/30 shadow-xs"
-                        : "bg-white text-[#12071f] border-[#4b1d7a]/15 hover:border-[#4b1d7a]/35 hover:bg-white/95 shadow-xs"
+                    className={`rounded-2xl p-3.5 text-left transition-all duration-200 border flex flex-col justify-between cursor-pointer ${
+                      isSelected
+                        ? "bg-[#12071f] text-white border-[#e4b84a] ring-2 ring-[#e4b84a]/30 shadow-md"
+                        : "bg-[#fdfbf7] text-[#12071f] border-[#4b1d7a]/15 hover:border-[#4b1d7a] hover:bg-white"
                     }`}
                   >
                     <div>
-                      <div className="flex items-center justify-between gap-1.5">
-                        <span className="text-xl transition-transform duration-300 hover:scale-125">{g.icon}</span>
-                        <div className="flex items-center gap-1">
-                          <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isAtCurrentVenue ? "text-[#e4b84a]" : "text-[#4b1d7a]"}`}>
-                            {g.groupName}
-                          </span>
-                        </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg">{g.icon}</span>
+                        <span className={`text-[10px] font-extrabold uppercase ${isSelected ? "text-[#e4b84a]" : "text-[#4b1d7a]"}`}>
+                          {g.groupName}
+                        </span>
                       </div>
-                      <p className="font-extrabold text-xs mt-2.5 leading-snug">{g.theme}</p>
-                      
-                      {/* Hosting location pill */}
-                      <div className="mt-2">
-                        {isAtCurrentVenue ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-300 border border-emerald-500/30">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            <span>Active in Your Hall</span>
-                          </span>
-                        ) : isAtOtherVenue ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 border border-indigo-200 px-2 py-0.5 text-[9px] font-bold text-indigo-700 truncate max-w-full" title={`Presently in ${hostingVenue?.location}`}>
-                            <span>📍 In {hostingVenue?.location?.split(" ")[0]} ({hostingVenue?.venueName})</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[9px] font-bold text-slate-600">
-                            <span>⚪ Standby</span>
-                          </span>
-                        )}
-                      </div>
+                      <p className="font-extrabold text-xs mt-1.5 leading-tight">{g.theme}</p>
                     </div>
 
-                    <div className="mt-3 pt-2 border-t border-black/[0.06] flex items-center justify-between text-[10px]">
-                      <span className="opacity-70 font-semibold">{teamCount} Teams</span>
-                      {isAtCurrentVenue ? (
-                        <span className="font-bold text-emerald-400 flex items-center gap-1">
-                          <span>Unselect ✕</span>
-                        </span>
-                      ) : isAtOtherVenue ? (
-                        <span className="font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5">
-                          <span>Transfer Here ⇄</span>
+                    <div className="mt-2.5 pt-1.5 border-t border-black/[0.06] flex items-center justify-between text-[10px]">
+                      <span className="opacity-70 font-semibold">{g.groupName === "Group V" ? "19" : "18"} Teams</span>
+                      {hostingVenue ? (
+                        <span className={`font-bold ${isSelected ? "text-emerald-400" : "text-indigo-600"}`}>
+                          📍 {hostingVenue.location.split(" ")[0]}
                         </span>
                       ) : (
-                        <span className="font-bold text-[#4b1d7a] flex items-center gap-0.5">
-                          <span>Select →</span>
-                        </span>
+                        <span className="text-slate-400">Standby</span>
                       )}
                     </div>
                   </button>
@@ -550,118 +547,40 @@ export default function ScoresPage() {
             </div>
           </div>
 
-          {/* Step 2: Physical Venue Hall */}
+          {/* Event Selector */}
           <div className="border-t border-[#4b1d7a]/10 pt-4">
-            {currentUser?.role === "super_admin" ? (
-              <div>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[#4b1d7a]">
-                    2. Physical Venue Location (Super Admin Control):
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => assignGroupToVenue()}
-                    disabled={rotating}
-                    className="rounded-full border border-[#4b1d7a]/30 bg-white px-3 py-1 text-[11px] font-bold text-[#4b1d7a] hover:bg-[#4b1d7a] hover:text-white transition disabled:opacity-50 shadow-xs"
-                  >
-                    {rotating ? "Updating…" : `📍 Set ${selectedGroupName} Active in ${activeVenue?.location.split(" ")[0] || "this Hall"}`}
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {venues.map((v) => (
-                    <button
-                      key={v.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedVenueId(v.id);
-                        if (v.groupName && v.groupName !== "null") {
-                          setSelectedGroupName(v.groupName);
-                        } else {
-                          setSelectedGroupName("");
-                        }
-                      }}
-                      className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition flex items-center gap-1.5 ${
-                        selectedVenueId === v.id
-                          ? "bg-[#4b1d7a] text-[#e4b84a] shadow-xs"
-                          : "bg-white text-[#12071f] border border-[#4b1d7a]/15 hover:bg-white/80"
-                      }`}
-                    >
-                      <span>📍 {v.location}</span>
-                      <span className="text-[10px] opacity-60">({v.venueName})</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[#4b1d7a]">
-                    Host Venue Location:
-                  </label>
-                  <span className="inline-flex items-center gap-2 rounded-xl border border-[#4b1d7a]/20 bg-[#4b1d7a]/5 px-3.5 py-1.5 text-xs font-extrabold text-[#12071f]">
-                    <span>📍</span>
-                    <span>{activeVenue?.location || "No Venue Allocated"}</span>
-                    {activeVenue?.venueName && (
-                      <span className="text-[10px] text-[#6d6178] font-normal">({activeVenue.venueName})</span>
-                    )}
-                    <span className="rounded-md bg-purple-100 border border-purple-200 px-2 py-0.5 text-[10px] font-bold text-purple-800">
-                      🔒 Your Assigned Hall
-                    </span>
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => assignGroupToVenue()}
-                  disabled={rotating || !activeVenue || !selectedGroupName}
-                  className="rounded-full border border-[#4b1d7a]/30 bg-white px-3.5 py-1.5 text-xs font-bold text-[#4b1d7a] hover:bg-[#4b1d7a] hover:text-white transition disabled:opacity-50 shadow-xs cursor-pointer"
-                >
-                  {rotating
-                    ? "Updating…"
-                    : selectedGroupName
-                    ? `📍 Set ${selectedGroupName} Active in ${activeVenue?.location?.split(" ")[0] || "this Hall"}`
-                    : "📍 Select a group first"}
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Step 3: Active Event */}
-          <div className="border-t border-[#4b1d7a]/10 pt-4">
-            <label className="text-xs font-bold uppercase tracking-wider text-[#4b1d7a] block mb-2.5">
-              3. Select Active Evaluation Event:
-            </label>
-            {events.length === 0 ? (
-              <div className="rounded-xl bg-amber-50 border border-amber-300 p-3.5 text-xs text-amber-800 flex items-center justify-between">
-                <span>⚠️ No active scoring events found.</span>
-                <Link href="/admin/events" className="rounded-lg bg-amber-600 px-3 py-1 text-white font-bold text-xs hover:bg-amber-700">
-                  + Create Event
+            <div className="flex items-center justify-between gap-2 mb-2.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#4b1d7a]">
+                2. Select Evaluation Event Criteria:
+              </label>
+              {currentUser?.role === "super_admin" && (
+                <Link href="/admin#events" className="text-[11px] font-bold text-[#4b1d7a] hover:text-[#e4b84a]">
+                  ⚙️ Manage / Add Events →
                 </Link>
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {events.map((e) => {
-                  const isSelected = selectedEventId === e.id;
-                  return (
-                    <button
-                      key={e.id}
-                      type="button"
-                      onClick={() => setSelectedEventId(e.id)}
-                      className={`rounded-xl px-4 py-2 text-xs font-bold transition flex items-center gap-2 ${
-                        isSelected
-                          ? "bg-[#e4b84a] text-[#12071f] shadow-md shadow-[#e4b84a]/20"
-                          : "bg-white text-[#12071f] border border-[#4b1d7a]/15 hover:bg-white/80"
-                      }`}
-                    >
-                      <span>{e.eventName}</span>
-                      <span className="rounded-md bg-black/10 px-1.5 py-0.5 text-[10px] font-mono font-bold">
-                        Max {e.maximumScore} pts
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              {events.map((e) => {
+                const isSelected = selectedEventId === e.id;
+                return (
+                  <button
+                    key={e.id}
+                    type="button"
+                    onClick={() => setSelectedEventId(e.id)}
+                    className={`rounded-xl px-4 py-2.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+                      isSelected
+                        ? "bg-[#e4b84a] text-[#12071f] shadow-md shadow-[#e4b84a]/25 scale-[1.02]"
+                        : "bg-white text-[#12071f] border border-[#4b1d7a]/15 hover:bg-[#fdfbf7] hover:border-[#4b1d7a]/40"
+                    }`}
+                  >
+                    <span>{e.eventName}</span>
+                    <span className="rounded-md bg-black/10 px-2 py-0.5 text-[10px] font-mono font-bold">
+                      Max {e.maximumScore} pts
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
