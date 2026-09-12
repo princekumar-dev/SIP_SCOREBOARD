@@ -2,9 +2,10 @@
  * Premium Excel Export Utility for MSEC SIP Team Events
  *
  * Generates multi-tab Excel workbooks (.xlsx) with:
+ *  - "S.No" as the starting column (1, 2, 3...)
  *  - Official SIP header banners (TRIBE FORMATION, VENUE NAME, CLASSES)
- *  - Vertically merged cells for Tribe Code, Team Name, Group, Team Lead, and Scores
- *  - Individual row listings for each student member and their department/section
+ *  - Both Horizontally and Vertically Centered Alignment for merged team cells (S.No, Code, Name, Group, Lead, Scores)
+ *  - Each team member listed on their own row under TEAM MEMBERS and SECTION
  *  - Calculated event totals and overall arena standings
  */
 
@@ -69,6 +70,61 @@ const GROUPS_CONFIG = [
 ];
 
 /**
+ * Applies horizontal & vertical alignment styles to all cells in a worksheet
+ */
+function applySheetStyles(
+  ws: XLSX.WorkSheet,
+  headerRowIdx: number,
+  totalCols: number,
+  eventsCount: number,
+  isBlankTemplate: boolean = false
+) {
+  const range = XLSX.utils.decode_range(ws["!ref"] || "A1:Z100");
+
+  for (let r = range.s.r; r <= range.e.r; r++) {
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const cellRef = XLSX.utils.encode_cell({ r, c });
+      const cell = ws[cellRef];
+      if (!cell) continue;
+
+      if (r < headerRowIdx) {
+        // Banner rows: Centered horizontally and vertically, bold
+        cell.s = {
+          alignment: { vertical: "center", horizontal: "center", wrapText: true },
+          font: { bold: true, sz: r === 0 ? 13 : 11 },
+        };
+      } else if (r === headerRowIdx) {
+        // Table Headers: Centered horizontally and vertically, bold
+        cell.s = {
+          alignment: { vertical: "center", horizontal: "center", wrapText: true },
+          font: { bold: true },
+        };
+      } else {
+        // Data rows:
+        // Col 0: S.No (Center, Center)
+        // Col 1: Tribe Code (Center, Center)
+        // Col 2: Team Name (Center, Center)
+        // Col 3: Group (Center, Center)
+        // Col 4: Team Lead (Center, Center)
+        // Col 5: Team Member (Center vertical, Left horizontal)
+        // Col 6: Department (Center vertical, Left horizontal)
+        // Col 7: Class Section (Center, Center)
+        // Col 8+: Scores & Total (Center, Center)
+        if (c === 5 || c === 6) {
+          cell.s = {
+            alignment: { vertical: "center", horizontal: "left" },
+          };
+        } else {
+          cell.s = {
+            alignment: { vertical: "center", horizontal: "center" },
+          };
+        }
+      }
+    }
+  }
+}
+
+/**
  * Builds rows, column widths, and cell merges for a specific venue group sheet
  */
 function buildGroupSheet(
@@ -79,6 +135,7 @@ function buildGroupSheet(
 ) {
   const eventHeaders = events.map((e) => `${e.eventName} (Max ${e.maximumScore})`);
   const headers = [
+    "S.No",
     "Tribe Code",
     "Team Name",
     "Group",
@@ -117,6 +174,8 @@ function buildGroupSheet(
     headers,
   ];
 
+  const headerRowIdx = 5;
+
   const merges: XLSX.Range[] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } },
@@ -124,11 +183,12 @@ function buildGroupSheet(
     { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } },
   ];
 
-  tribes.forEach((t) => {
+  tribes.forEach((t, tIdx) => {
     const startRowIdx = allRows.length;
     const memberCount = t.members.length > 0 ? t.members.length : 1;
     const endRowIdx = startRowIdx + memberCount - 1;
 
+    const sno = tIdx + 1;
     const leadName = t.leader?.name || (t.members[0] ? t.members[0].name : "N/A");
     const scoreCells = events.map((e) => {
       if (isBlankTemplate) return "";
@@ -140,6 +200,7 @@ function buildGroupSheet(
 
     if (t.members.length === 0) {
       allRows.push([
+        sno,
         t.tribeCode,
         t.tribeName,
         t.groupName,
@@ -154,6 +215,7 @@ function buildGroupSheet(
     } else {
       const firstMember = t.members[0];
       allRows.push([
+        sno,
         t.tribeCode,
         t.tribeName,
         t.groupName,
@@ -173,6 +235,7 @@ function buildGroupSheet(
           "",
           "",
           "",
+          "",
           m.name,
           m.department || "",
           m.classSection || "",
@@ -184,18 +247,19 @@ function buildGroupSheet(
 
       // Vertical cell merges across the team's member block
       if (memberCount > 1) {
-        merges.push({ s: { r: startRowIdx, c: 0 }, e: { r: endRowIdx, c: 0 } }); // Tribe Code
-        merges.push({ s: { r: startRowIdx, c: 1 }, e: { r: endRowIdx, c: 1 } }); // Team Name
-        merges.push({ s: { r: startRowIdx, c: 2 }, e: { r: endRowIdx, c: 2 } }); // Group
-        merges.push({ s: { r: startRowIdx, c: 3 }, e: { r: endRowIdx, c: 3 } }); // Team Lead
+        merges.push({ s: { r: startRowIdx, c: 0 }, e: { r: endRowIdx, c: 0 } }); // S.No
+        merges.push({ s: { r: startRowIdx, c: 1 }, e: { r: endRowIdx, c: 1 } }); // Tribe Code
+        merges.push({ s: { r: startRowIdx, c: 2 }, e: { r: endRowIdx, c: 2 } }); // Team Name
+        merges.push({ s: { r: startRowIdx, c: 3 }, e: { r: endRowIdx, c: 3 } }); // Group
+        merges.push({ s: { r: startRowIdx, c: 4 }, e: { r: endRowIdx, c: 4 } }); // Team Lead
 
         events.forEach((_, evIdx) => {
-          merges.push({ s: { r: startRowIdx, c: 7 + evIdx }, e: { r: endRowIdx, c: 7 + evIdx } });
+          merges.push({ s: { r: startRowIdx, c: 8 + evIdx }, e: { r: endRowIdx, c: 8 + evIdx } });
         });
-        merges.push({ s: { r: startRowIdx, c: 7 + events.length }, e: { r: endRowIdx, c: 7 + events.length } }); // Total Score
+        merges.push({ s: { r: startRowIdx, c: 8 + events.length }, e: { r: endRowIdx, c: 8 + events.length } }); // Total Score
 
         if (isBlankTemplate) {
-          merges.push({ s: { r: startRowIdx, c: 8 + events.length }, e: { r: endRowIdx, c: 8 + events.length } }); // Remarks
+          merges.push({ s: { r: startRowIdx, c: 9 + events.length }, e: { r: endRowIdx, c: 9 + events.length } }); // Remarks
         }
       }
     }
@@ -205,6 +269,7 @@ function buildGroupSheet(
   ws["!merges"] = merges;
 
   ws["!cols"] = [
+    { wch: 8 },  // S.No
     { wch: 14 }, // Tribe Code
     { wch: 26 }, // Team Name
     { wch: 12 }, // Group
@@ -217,6 +282,8 @@ function buildGroupSheet(
     ...(isBlankTemplate ? [{ wch: 30 }] : []),
   ];
 
+  applySheetStyles(ws, headerRowIdx, totalCols, events.length, isBlankTemplate);
+
   return ws;
 }
 
@@ -228,6 +295,7 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
 
   // 1. Overall Leaderboard Sheet
   const overallHeaders = [
+    "S.No",
     "Rank",
     "Tribe Code",
     "Team Name",
@@ -275,6 +343,7 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
     const memberCount = t.members.length > 0 ? t.members.length : 1;
     const endRowIdx = startRowIdx + memberCount - 1;
 
+    const sno = idx + 1;
     const leadName = t.leader?.name || (t.members[0] ? t.members[0].name : "N/A");
     const scoreCells = data.events.map((e) => {
       const match = t.eventScores.find((es) => es.eventId === e.id);
@@ -284,6 +353,7 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
 
     if (t.members.length === 0) {
       overallRows.push([
+        sno,
         rankLabel,
         t.tribeCode,
         t.tribeName,
@@ -299,6 +369,7 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
     } else {
       const firstM = t.members[0];
       overallRows.push([
+        sno,
         rankLabel,
         t.tribeCode,
         t.tribeName,
@@ -321,6 +392,7 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
           "",
           "",
           "",
+          "",
           m.name,
           m.department || "",
           m.classSection || "",
@@ -330,16 +402,17 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
       }
 
       if (memberCount > 1) {
-        overallMerges.push({ s: { r: startRowIdx, c: 0 }, e: { r: endRowIdx, c: 0 } }); // Rank
-        overallMerges.push({ s: { r: startRowIdx, c: 1 }, e: { r: endRowIdx, c: 1 } }); // Code
-        overallMerges.push({ s: { r: startRowIdx, c: 2 }, e: { r: endRowIdx, c: 2 } }); // Team Name
-        overallMerges.push({ s: { r: startRowIdx, c: 3 }, e: { r: endRowIdx, c: 3 } }); // Group
-        overallMerges.push({ s: { r: startRowIdx, c: 4 }, e: { r: endRowIdx, c: 4 } }); // Venue
-        overallMerges.push({ s: { r: startRowIdx, c: 5 }, e: { r: endRowIdx, c: 5 } }); // Lead
+        overallMerges.push({ s: { r: startRowIdx, c: 0 }, e: { r: endRowIdx, c: 0 } }); // S.No
+        overallMerges.push({ s: { r: startRowIdx, c: 1 }, e: { r: endRowIdx, c: 1 } }); // Rank
+        overallMerges.push({ s: { r: startRowIdx, c: 2 }, e: { r: endRowIdx, c: 2 } }); // Code
+        overallMerges.push({ s: { r: startRowIdx, c: 3 }, e: { r: endRowIdx, c: 3 } }); // Team Name
+        overallMerges.push({ s: { r: startRowIdx, c: 4 }, e: { r: endRowIdx, c: 4 } }); // Group
+        overallMerges.push({ s: { r: startRowIdx, c: 5 }, e: { r: endRowIdx, c: 5 } }); // Venue
+        overallMerges.push({ s: { r: startRowIdx, c: 6 }, e: { r: endRowIdx, c: 6 } }); // Lead
         data.events.forEach((_, evIdx) => {
-          overallMerges.push({ s: { r: startRowIdx, c: 9 + evIdx }, e: { r: endRowIdx, c: 9 + evIdx } });
+          overallMerges.push({ s: { r: startRowIdx, c: 10 + evIdx }, e: { r: endRowIdx, c: 10 + evIdx } });
         });
-        overallMerges.push({ s: { r: startRowIdx, c: 9 + data.events.length }, e: { r: endRowIdx, c: 9 + data.events.length } }); // Total
+        overallMerges.push({ s: { r: startRowIdx, c: 10 + data.events.length }, e: { r: endRowIdx, c: 10 + data.events.length } }); // Total
       }
     }
   });
@@ -347,18 +420,21 @@ export function downloadMasterArenaExcel(data: MasterExportData) {
   const wsOverall = XLSX.utils.aoa_to_sheet(overallRows);
   wsOverall["!merges"] = overallMerges;
   wsOverall["!cols"] = [
-    { wch: 10 },
-    { wch: 14 },
-    { wch: 26 },
-    { wch: 12 },
-    { wch: 22 },
-    { wch: 24 },
-    { wch: 28 },
-    { wch: 20 },
-    { wch: 16 },
+    { wch: 8 },  // S.No
+    { wch: 10 }, // Rank
+    { wch: 14 }, // Code
+    { wch: 26 }, // Team Name
+    { wch: 12 }, // Group
+    { wch: 22 }, // Venue
+    { wch: 24 }, // Lead
+    { wch: 28 }, // Member
+    { wch: 20 }, // Dept
+    { wch: 16 }, // Sec
     ...data.events.map(() => ({ wch: 24 })),
     { wch: 16 },
   ];
+
+  applySheetStyles(wsOverall, 4, overallHeaders.length, data.events.length, false);
   XLSX.utils.book_append_sheet(wb, wsOverall, "OVERALL STANDINGS");
 
   // 2. Individual Venue Sheets (VENUE 1 to VENUE 5)
@@ -412,6 +488,7 @@ export function downloadMembersDirectoryExcel(data: MasterExportData) {
   GROUPS_CONFIG.forEach((g) => {
     const groupTribes = data.tribes.filter((t) => t.groupName.toLowerCase() === g.groupName.toLowerCase());
     const headers = [
+      "S.No",
       "Tribe Code",
       "Team Name",
       "Group",
@@ -452,17 +529,19 @@ export function downloadMembersDirectoryExcel(data: MasterExportData) {
       { s: { r: 3, c: 0 }, e: { r: 3, c: headers.length - 1 } },
     ];
 
-    groupTribes.forEach((t) => {
+    groupTribes.forEach((t, tIdx) => {
       const startRowIdx = rows.length;
+      const sno = tIdx + 1;
       const leadName = t.leader?.name || (t.members[0] ? t.members[0].name : "N/A");
       const memberCount = t.members.length > 0 ? t.members.length : 1;
       const endRowIdx = startRowIdx + memberCount - 1;
 
       if (t.members.length === 0) {
-        rows.push([t.tribeCode, t.tribeName, t.groupName, leadName, "No members listed", "", "", ""]);
+        rows.push([sno, t.tribeCode, t.tribeName, t.groupName, leadName, "No members listed", "", "", ""]);
       } else {
         const firstM = t.members[0];
         rows.push([
+          sno,
           t.tribeCode,
           t.tribeName,
           t.groupName,
@@ -480,6 +559,7 @@ export function downloadMembersDirectoryExcel(data: MasterExportData) {
             "",
             "",
             "",
+            "",
             m.name,
             m.department || "",
             m.classSection || "",
@@ -492,6 +572,7 @@ export function downloadMembersDirectoryExcel(data: MasterExportData) {
           dirMerges.push({ s: { r: startRowIdx, c: 1 }, e: { r: endRowIdx, c: 1 } });
           dirMerges.push({ s: { r: startRowIdx, c: 2 }, e: { r: endRowIdx, c: 2 } });
           dirMerges.push({ s: { r: startRowIdx, c: 3 }, e: { r: endRowIdx, c: 3 } });
+          dirMerges.push({ s: { r: startRowIdx, c: 4 }, e: { r: endRowIdx, c: 4 } });
         }
       }
     });
@@ -499,15 +580,18 @@ export function downloadMembersDirectoryExcel(data: MasterExportData) {
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws["!merges"] = dirMerges;
     ws["!cols"] = [
-      { wch: 14 },
-      { wch: 26 },
-      { wch: 12 },
-      { wch: 24 },
-      { wch: 28 },
-      { wch: 22 },
-      { wch: 16 },
-      { wch: 16 },
+      { wch: 8 },  // S.No
+      { wch: 14 }, // Code
+      { wch: 26 }, // Team Name
+      { wch: 12 }, // Group
+      { wch: 24 }, // Team Lead
+      { wch: 28 }, // Member Name
+      { wch: 22 }, // Dept
+      { wch: 16 }, // Sec
+      { wch: 16 }, // Role
     ];
+
+    applySheetStyles(ws, 5, headers.length, 0, false);
     XLSX.utils.book_append_sheet(wb, ws, g.sheetName);
   });
 
