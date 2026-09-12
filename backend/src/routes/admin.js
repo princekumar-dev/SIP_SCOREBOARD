@@ -127,35 +127,26 @@ router.put("/groups/assign-venue", async (req, res) => {
   const currentVenueOfGroup = await Venue.findOne({ groupName });
   const prevGroupAtTargetVenue = targetVenue.groupName;
 
-  // If another venue was hosting this group
+  // 1. If another venue was hosting this group, release that other venue to standby
   if (currentVenueOfGroup && String(currentVenueOfGroup._id) !== String(targetVenue._id)) {
-    if (prevGroupAtTargetVenue && prevGroupAtTargetVenue !== groupName) {
-      // Clean 1-to-1 swap
-      await Tribe.updateMany(
-        { groupName: prevGroupAtTargetVenue },
-        { $set: { venueId: currentVenueOfGroup._id } }
-      );
-      if (GROUP_MAP[prevGroupAtTargetVenue]) {
-        currentVenueOfGroup.groupName = prevGroupAtTargetVenue;
-        currentVenueOfGroup.theme = GROUP_MAP[prevGroupAtTargetVenue].theme;
-        currentVenueOfGroup.motif = GROUP_MAP[prevGroupAtTargetVenue].motif;
-        currentVenueOfGroup.participatingClasses = GROUP_MAP[prevGroupAtTargetVenue].classes;
-        currentVenueOfGroup.description = GROUP_MAP[prevGroupAtTargetVenue].description;
-        await currentVenueOfGroup.save();
-      }
-    } else {
-      // The other venue is now left in standby
-      currentVenueOfGroup.groupName = null;
-      currentVenueOfGroup.theme = "Pending Group Selection";
-      currentVenueOfGroup.motif = "neutral";
-      currentVenueOfGroup.participatingClasses = [];
-      currentVenueOfGroup.description = "Waiting for venue host to select and activate the currently present group.";
-      await currentVenueOfGroup.save();
-    }
+    currentVenueOfGroup.groupName = null;
+    currentVenueOfGroup.theme = "Pending Group Selection";
+    currentVenueOfGroup.motif = "neutral";
+    currentVenueOfGroup.participatingClasses = [];
+    currentVenueOfGroup.description = "Waiting for venue host to select and activate the currently present group.";
+    await currentVenueOfGroup.save();
     broadcast(req, { kind: "venue-move", venueId: String(currentVenueOfGroup._id) });
   }
 
-  // Assign groupName to targetVenue
+  // 2. If target venue was hosting a different group, release that previous group's tribes
+  if (prevGroupAtTargetVenue && prevGroupAtTargetVenue !== groupName) {
+    await Tribe.updateMany(
+      { groupName: prevGroupAtTargetVenue },
+      { $set: { venueId: null } }
+    );
+  }
+
+  // 3. Assign requested group to target venue
   const result = await Tribe.updateMany(
     { groupName },
     { $set: { venueId: targetVenue._id } }

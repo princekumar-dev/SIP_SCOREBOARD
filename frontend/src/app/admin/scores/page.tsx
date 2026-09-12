@@ -150,21 +150,15 @@ export default function ScoresPage() {
   );
 
   const groupsFromVenues = useMemo(() => {
-    const map = new Map<string, { groupName: string; theme: string; icon: string }>();
-    ALL_GROUPS.forEach((g) => {
-      map.set(g.groupName, { ...g });
+    return ALL_GROUPS.map((g) => {
+      const hostingVenue = venues.find(
+        (v) => v.groupName && v.groupName.toLowerCase() === g.groupName.toLowerCase()
+      );
+      return {
+        ...g,
+        hostingVenue: hostingVenue || null,
+      };
     });
-    venues.forEach((v) => {
-      if (v.groupName) {
-        const existing = map.get(v.groupName);
-        map.set(v.groupName, {
-          groupName: v.groupName,
-          theme: v.theme || existing?.theme || "Untitled",
-          icon: GROUP_ICONS[v.groupName] || existing?.icon || "🎯",
-        });
-      }
-    });
-    return Array.from(map.values());
   }, [venues]);
 
   const activeGroup = useMemo(
@@ -179,17 +173,29 @@ export default function ScoresPage() {
     setRotating(true);
     setGlobalError("");
     setGlobalMessage("");
+
+    const prevHostingVenue = venues.find(
+      (v) => v.groupName && v.groupName.toLowerCase() === targetGroup.toLowerCase() && v.id !== selectedVenueId
+    );
+
     try {
       const res = await apiSend<any>("/api/admin/groups/assign-venue", getToken(), "PUT", {
         groupName: targetGroup,
         venueId: selectedVenueId,
         reason: `Host activated ${targetGroup} into ${activeVenue?.location || "Venue"}`,
       });
-      setGlobalMessage(`✓ ${targetGroup} (${res.updatedCount || 18} tribes) is now actively hosted in ${res.venueLocation}!`);
+
+      if (prevHostingVenue) {
+        setGlobalMessage(`✓ Transferred ${targetGroup} from ${prevHostingVenue.location} (${prevHostingVenue.venueName}) into ${res.venueLocation || activeVenue?.location || "your venue"}!`);
+      } else {
+        setGlobalMessage(`✓ ${targetGroup} (${res.updatedCount || 18} tribes) is now actively hosted in ${res.venueLocation || activeVenue?.location || "your venue"}!`);
+      }
+
       setTribeRows((prev) =>
-        prev.map((r) => ({ ...r, currentVenue: res.venueLocation }))
+        prev.map((r) => ({ ...r, currentVenue: res.venueLocation || activeVenue?.location || "" }))
       );
-      // Re-fetch all venues from server so accurate swapped assignments are reflected
+
+      // Re-fetch all venues from server so accurate assignments are reflected across all venues
       try {
         const freshVenues = await apiGet<Venue[]>("/api/venues");
         setVenues(freshVenues);
@@ -198,6 +204,7 @@ export default function ScoresPage() {
           prev.map((v) => (v.id === selectedVenueId ? { ...v, groupName: targetGroup } : v))
         );
       }
+
       if (currentUser && currentUser.venue) {
         setCurrentUser((prev: any) => ({
           ...prev,
@@ -449,7 +456,11 @@ export default function ScoresPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
               {groupsFromVenues.map((g, idx) => {
+                const hostingVenue = g.hostingVenue;
                 const isSelected = selectedGroupName === g.groupName;
+                const isAtCurrentVenue = isSelected || (hostingVenue && hostingVenue.id === selectedVenueId);
+                const isAtOtherVenue = !isAtCurrentVenue && Boolean(hostingVenue);
+
                 const groupSelectedStyle =
                   idx === 0
                     ? "bg-gradient-to-br from-[#12071f] via-[#2d0a1b] to-[#12071f] text-white border-rose-400 ring-2 ring-rose-400/40 shadow-lg shadow-rose-900/30"
@@ -468,28 +479,58 @@ export default function ScoresPage() {
                     key={g.groupName}
                     type="button"
                     onClick={() => handleSelectGroup(g.groupName)}
-                    className={`rounded-2xl p-4 text-left transition-all duration-300 border flex flex-col justify-between cursor-pointer hover-lift ${
-                      isSelected
+                    className={`rounded-2xl p-4 text-left transition-all duration-300 border flex flex-col justify-between cursor-pointer hover-lift relative ${
+                      isAtCurrentVenue
                         ? groupSelectedStyle
-                        : "bg-white text-[#12071f] border-[#4b1d7a]/15 hover:border-[#4b1d7a]/35 hover:bg-white"
+                        : isAtOtherVenue
+                        ? "bg-white/95 text-[#12071f] border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50/30 shadow-xs"
+                        : "bg-white text-[#12071f] border-[#4b1d7a]/15 hover:border-[#4b1d7a]/35 hover:bg-white/95 shadow-xs"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl transition-transform duration-300 hover:scale-125">{g.icon}</span>
-                      <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isSelected ? "text-[#e4b84a]" : "text-[#4b1d7a]"}`}>
-                        {g.groupName}
-                      </span>
+                    <div>
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="text-xl transition-transform duration-300 hover:scale-125">{g.icon}</span>
+                        <div className="flex items-center gap-1">
+                          <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isAtCurrentVenue ? "text-[#e4b84a]" : "text-[#4b1d7a]"}`}>
+                            {g.groupName}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="font-extrabold text-xs mt-2.5 leading-snug">{g.theme}</p>
+                      
+                      {/* Hosting location pill */}
+                      <div className="mt-2">
+                        {isAtCurrentVenue ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-300 border border-emerald-500/30">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <span>Active in Your Hall</span>
+                          </span>
+                        ) : isAtOtherVenue ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 border border-indigo-200 px-2 py-0.5 text-[9px] font-bold text-indigo-700 truncate max-w-full" title={`Presently in ${hostingVenue?.location}`}>
+                            <span>📍 In {hostingVenue?.location?.split(" ")[0]} ({hostingVenue?.venueName})</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[9px] font-bold text-slate-600">
+                            <span>⚪ Standby</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="font-extrabold text-xs mt-2.5 leading-snug">{g.theme}</p>
-                    <div className="mt-2.5 pt-2 border-t border-black/[0.06] flex items-center justify-between text-[10px]">
+
+                    <div className="mt-3 pt-2 border-t border-black/[0.06] flex items-center justify-between text-[10px]">
                       <span className="opacity-70 font-semibold">{teamCount} Teams</span>
-                      {isSelected ? (
-                        <span className="font-bold text-[#35d07f] flex items-center gap-1">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#35d07f] animate-pulse" />
-                          <span>Active (Unselect ✕)</span>
+                      {isAtCurrentVenue ? (
+                        <span className="font-bold text-emerald-400 flex items-center gap-1">
+                          <span>Unselect ✕</span>
+                        </span>
+                      ) : isAtOtherVenue ? (
+                        <span className="font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5">
+                          <span>Transfer Here ⇄</span>
                         </span>
                       ) : (
-                        <span className="text-[#6d6178] opacity-60">Select →</span>
+                        <span className="font-bold text-[#4b1d7a] flex items-center gap-0.5">
+                          <span>Select →</span>
+                        </span>
                       )}
                     </div>
                   </button>
