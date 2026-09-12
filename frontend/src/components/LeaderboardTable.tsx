@@ -167,21 +167,50 @@ export function LeaderboardTable({
 }
 
 export function Podium({ rows }: { rows: LeaderboardRow[] }) {
-  const first = rows[0];
-  const second = rows[1];
-  const third = rows[2];
-  if (!first) return null;
+  const scoredRows = rows.filter((r) => r.rank !== null && r.rank !== undefined && Number(r.totalScore) > 0);
+
+  if (scoredRows.length === 0) {
+    return (
+      <div className="panel px-4 sm:px-6 py-10 sm:py-12 text-center text-[#6d6178] animate-fade-in rounded-2xl sm:rounded-3xl border border-[#4b1d7a]/15 bg-white/70 backdrop-blur-sm">
+        <div className="text-4xl mb-3 animate-float">🏆</div>
+        <h3 className="font-extrabold text-base sm:text-lg text-[#12071f]">Podium Standings Awaiting Live Scores</h3>
+        <p className="text-xs sm:text-sm text-[#6d6178] mt-1 max-w-md mx-auto font-medium">
+          Gold, Silver, and Bronze podium rankings will appear here in real-time as venue hosts submit evaluation scores.
+        </p>
+      </div>
+    );
+  }
+
+  const first = scoredRows[0];
+  const second = scoredRows[1];
+  const third = scoredRows[2];
 
   return (
-    <div className="grid gap-5 md:grid-cols-3 items-end pt-4">
+    <div className="grid gap-4 sm:gap-5 md:grid-cols-3 items-end pt-2 sm:pt-4">
       <div className="order-2 md:order-1">
-        <PodiumCard row={second} place="02 SILVER" medal="🥈" delay={0.1} podiumClass="podium-2" />
+        {second ? (
+          <PodiumCard row={second} place="02 SILVER" medal="🥈" delay={0.1} podiumClass="podium-2" />
+        ) : (
+          <div className="panel p-6 text-center rounded-2xl sm:rounded-3xl border border-dashed border-black/10 bg-white/40 text-xs text-[#6d6178] h-full flex flex-col items-center justify-center min-h-[180px]">
+            <span className="text-2xl block mb-1">🥈</span>
+            <span className="font-bold text-[#12071f]/70">Awaiting 2nd Place</span>
+            <span className="text-[10px] text-[#6d6178] mt-1">Pending evaluations</span>
+          </div>
+        )}
       </div>
       <div className="order-1 md:order-2 md:-translate-y-4">
         <PodiumCard row={first} place="01 GOLD" medal="🏆" delay={0} podiumClass="podium-1" />
       </div>
       <div className="order-3">
-        <PodiumCard row={third} place="03 BRONZE" medal="🥉" delay={0.2} podiumClass="podium-3" />
+        {third ? (
+          <PodiumCard row={third} place="03 BRONZE" medal="🥉" delay={0.2} podiumClass="podium-3" />
+        ) : (
+          <div className="panel p-6 text-center rounded-2xl sm:rounded-3xl border border-dashed border-black/10 bg-white/40 text-xs text-[#6d6178] h-full flex flex-col items-center justify-center min-h-[180px]">
+            <span className="text-2xl block mb-1">🥉</span>
+            <span className="font-bold text-[#12071f]/70">Awaiting 3rd Place</span>
+            <span className="text-[10px] text-[#6d6178] mt-1">Pending evaluations</span>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -4,8 +4,9 @@ const Venue = require("../models/Venue");
 const Tribe = require("../models/Tribe");
 const Member = require("../models/Member");
 const Event = require("../models/Event");
+const Score = require("../models/Score");
 const { connectDb } = require("../db");
-const { buildLeaderboard } = require("../utils/ranking");
+const { buildLeaderboard, getTribeTotal } = require("../utils/ranking");
 const { GROUP_MAP } = require("../constants/groups");
 
 const router = express.Router();
@@ -248,7 +249,18 @@ router.get("/tribes", async (req, res) => {
 });
 
 router.get("/tribes/:id", async (req, res) => {
-  const tribe = await Tribe.findById(req.params.id).populate("venueId").lean();
+  const idParam = req.params.id;
+  let tribe = null;
+  if (mongoose.Types.ObjectId.isValid(idParam)) {
+    tribe = await Tribe.findById(idParam).populate("venueId").lean();
+  }
+  if (!tribe) {
+    tribe = await Tribe.findOne({
+      $or: [{ tribeCode: idParam.toUpperCase() }, { tribeName: new RegExp(`^${idParam}$`, "i") }],
+    })
+      .populate("venueId")
+      .lean();
+  }
   if (!tribe) return res.status(404).json({ error: "Tribe not found." });
 
   const [members, events, scores, overall] = await Promise.all([
@@ -285,7 +297,7 @@ router.get("/tribes/:id", async (req, res) => {
         },
     overallRank: standing?.rank || null,
     venueRank: venueStanding?.rank || null,
-    totalScore: standing?.totalScore || (await getTribeTotal(tribe._id)),
+    totalScore: standing?.totalScore !== undefined ? standing.totalScore : (await getTribeTotal(tribe._id)),
     events: events.map((event) => ({
       id: String(event._id),
       eventName: event.eventName,

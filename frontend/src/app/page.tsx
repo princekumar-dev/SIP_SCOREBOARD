@@ -147,39 +147,24 @@ export default async function HomePage() {
 
         <div className="grid gap-3.5 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
           {HOUSES_CONFIG.map((houseConfig, i) => {
-            const assignedVenue = venues.find(
-              (v) => v.groupName?.toLowerCase() === houseConfig.groupName.toLowerCase()
-            );
-            const classesText =
-              assignedVenue?.participatingClasses && assignedVenue.participatingClasses.length > 0
-                ? assignedVenue.participatingClasses.join(" · ")
-                : "Classes Not Allocated";
-            const venueTitle = assignedVenue?.theme || houseConfig.defaultTitle;
-            const locationText = assignedVenue?.location ? `📍 ${assignedVenue.location}` : "📍 No Venue Allocated";
-
             return (
               <Link
                 key={houseConfig.groupName}
                 href={`/tribes?group=${encodeURIComponent(houseConfig.groupName)}`}
-                className={`panel p-4 sm:p-5 flex flex-col justify-between group relative overflow-hidden transition-all duration-300 hover-lift ${houseConfig.cardClass}`}
+                className={`panel p-5 sm:p-6 flex flex-col justify-between group relative overflow-hidden transition-all duration-300 hover-lift ${houseConfig.cardClass}`}
                 style={{ animationDelay: `${0.05 + i * 0.05}s` }}
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl group-hover:scale-125 transition-transform duration-300">{houseConfig.icon}</span>
-                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${houseConfig.badge}`}>
-                      {houseConfig.groupName}
+                    <span className="text-3xl group-hover:scale-125 transition-transform duration-300">
+                      {houseConfig.icon}
                     </span>
                   </div>
-                  <p className="font-extrabold text-base text-[#12071f] mt-3 leading-snug">{venueTitle}</p>
-                  <p className="text-[11px] text-[#6d6178] mt-1 font-medium leading-relaxed">
-                    👥 {classesText}
-                  </p>
-                  <p className="text-[10px] text-[#4b1d7a]/70 mt-1 font-medium truncate">
-                    {locationText}
-                  </p>
+                  <h3 className="font-extrabold text-base sm:text-lg text-[#12071f] mt-4 leading-snug">
+                    {houseConfig.defaultTitle}
+                  </h3>
                 </div>
-                <div className="mt-4 pt-3 border-t border-black/[0.06] flex items-center justify-between text-xs font-bold">
+                <div className="mt-6 pt-3.5 border-t border-black/[0.06] flex items-center justify-between text-xs font-bold">
                   <span className={houseConfig.accentText}>18 Tribes</span>
                   <span className="text-[#12071f] transition-transform group-hover:translate-x-1">→</span>
                 </div>

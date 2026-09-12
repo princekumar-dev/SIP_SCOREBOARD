@@ -1,3 +1,4 @@
+const Venue = require("../models/Venue");
 const Tribe = require("../models/Tribe");
 const Score = require("../models/Score");
 
