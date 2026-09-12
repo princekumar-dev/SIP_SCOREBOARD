@@ -117,16 +117,52 @@ export function TribeModal({
             </div>
 
             <div className="mt-6">
-              <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#e4b84a]">Team Members</h3>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {data.members.map((member) => (
-                  <div key={member.id} className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-3">
-                    <p className="text-sm font-semibold text-white">{member.name}</p>
-                    <p className="text-xs text-[#e4b84a]/70 mt-0.5">
-                      {formatMemberMeta(member.department, member.classSection)}
-                    </p>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between">
+                <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#e4b84a]">Team Members</h3>
+                <span className="text-[10px] text-white/40">{data.members.length} Members</span>
+              </div>
+              <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                {data.members.map((member) => {
+                  if (member.isLeader) {
+                    return (
+                      <div
+                        key={member.id}
+                        className="sm:col-span-2 rounded-2xl border border-[#e4b84a]/50 bg-gradient-to-r from-[#e4b84a]/15 via-[#301250]/60 to-[#12071f] p-3.5 sm:p-4 shadow-lg shadow-[#e4b84a]/5 relative overflow-hidden transition-all hover:border-[#e4b84a]"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2.5">
+                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-[#e4b84a] text-[#12071f] text-sm font-bold shadow-sm">
+                              👑
+                            </span>
+                            <div>
+                              <p className="text-sm sm:text-base font-extrabold text-[#e4b84a] leading-tight">
+                                {member.name}
+                              </p>
+                              <p className="text-xs text-white/80 mt-0.5 font-medium">
+                                {formatMemberMeta(member.department, member.classSection)}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-[#e4b84a] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#12071f] shadow-sm shrink-0">
+                            Team Lead
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={member.id}
+                      className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-3 hover:bg-white/[0.07] hover:border-white/20 transition-all flex flex-col justify-between"
+                    >
+                      <p className="text-sm font-semibold text-white truncate">{member.name}</p>
+                      <p className="text-xs text-[#e4b84a]/70 mt-1">
+                        {formatMemberMeta(member.department, member.classSection)}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

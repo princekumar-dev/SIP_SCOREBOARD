@@ -305,12 +305,18 @@ router.get("/tribes/:id", async (req, res) => {
       score: scoreMap[String(event._id)]?.score ?? null,
       remarks: scoreMap[String(event._id)]?.remarks || "",
     })),
-    members: members.map((member) => ({
-      id: String(member._id),
-      name: member.name,
-      department: member.department,
-      classSection: member.classSection,
-    })),
+    members: members.map((member, index) => {
+      const isExplicit = /leader|team leader|\(tl\)|\(lead\)/i.test(member.name);
+      const isLeader = Boolean(member.isLeader || isExplicit || index === 0);
+      const cleanName = member.name.replace(/\s*\((team leader|leader|tl|lead)\)/gi, "").trim();
+      return {
+        id: String(member._id),
+        name: cleanName,
+        department: member.department,
+        classSection: member.classSection,
+        isLeader,
+      };
+    }),
   });
 });
 

@@ -61,18 +61,47 @@ export default async function TribePage({ params }: { params: Promise<{ id: stri
       <section className="mt-8 sm:mt-10">
         <h2 className="display mb-4 sm:mb-5 text-xl sm:text-2xl font-bold animate-fade-in-up">Members</h2>
         <div className="grid gap-2.5 sm:gap-3 grid-cols-1 sm:grid-cols-2">
-          {tribe.members.map((member, i) => (
-            <div
-              key={member.id}
-              className="panel p-3.5 sm:p-4 hover-lift animate-fade-in-up rounded-xl sm:rounded-2xl"
-              style={{ animationDelay: `${0.3 + i * 0.03}s` }}
-            >
-              <p className="font-semibold text-sm sm:text-base text-[#12071f]">{member.name}</p>
-              <p className="text-xs sm:text-sm text-[#6d6178] mt-0.5">
-                {formatMemberMeta(member.department, member.classSection)}
-              </p>
-            </div>
-          ))}
+          {tribe.members.map((member, i) => {
+            if (member.isLeader) {
+              return (
+                <div
+                  key={member.id}
+                  className="sm:col-span-2 rounded-2xl border-2 border-[#e4b84a]/60 bg-gradient-to-r from-[#e4b84a]/15 via-[#4b1d7a]/10 to-white p-4 shadow-md shadow-[#e4b84a]/10 hover-lift animate-fade-in-up"
+                  style={{ animationDelay: `${0.3 + i * 0.03}s` }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="grid h-8 w-8 place-items-center rounded-xl bg-[#e4b84a] text-[#12071f] text-sm font-bold shadow-xs">
+                        👑
+                      </span>
+                      <div>
+                        <p className="font-extrabold text-base text-[#12071f]">{member.name}</p>
+                        <p className="text-xs text-[#4b1d7a] font-semibold mt-0.5">
+                          {formatMemberMeta(member.department, member.classSection)}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-[#12071f] px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[#e4b84a] shadow-xs">
+                      Team Lead
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div
+                key={member.id}
+                className="panel p-3.5 sm:p-4 hover-lift animate-fade-in-up rounded-xl sm:rounded-2xl"
+                style={{ animationDelay: `${0.3 + i * 0.03}s` }}
+              >
+                <p className="font-semibold text-sm sm:text-base text-[#12071f]">{member.name}</p>
+                <p className="text-xs sm:text-sm text-[#6d6178] mt-0.5">
+                  {formatMemberMeta(member.department, member.classSection)}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </section>
     </div>

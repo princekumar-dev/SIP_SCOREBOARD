@@ -6,6 +6,7 @@ const memberSchema = new mongoose.Schema(
     name: { type: String, required: true, index: true },
     department: { type: String, default: "" },
     classSection: { type: String, default: "" },
+    isLeader: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
