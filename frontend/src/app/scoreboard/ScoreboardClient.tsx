@@ -264,18 +264,18 @@ export function ScoreboardClient({
         )}
 
         {/* Scoreboard Rows */}
-        <div className="flex-1 space-y-2.5 sm:space-y-3 mt-3 sm:mt-4">
+        <div className="flex-1 space-y-2 sm:space-y-3 mt-3 sm:mt-4">
           {visible.length === 0 ? (
-            <div className="py-20 sm:py-24 text-center rounded-3xl border border-white/[0.08] bg-white/[0.03] p-6 sm:p-8 animate-fade-in">
-              <div className="text-4xl mb-4 opacity-30">📊</div>
-              <p className="text-lg sm:text-xl font-bold text-white/70">No scores recorded yet for this station.</p>
+            <div className="py-16 sm:py-24 text-center rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-8 animate-fade-in">
+              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4 opacity-30">📊</div>
+              <p className="text-base sm:text-xl font-bold text-white/70">No scores recorded yet for this station.</p>
               <p className="mt-1 text-xs text-white/40">Evaluations submitted by venue hosts will appear live here instantly.</p>
             </div>
           ) : (
             visible.map((row, i) => (
               <div
                 key={`${row.id}-${row.rank}-${i}`}
-                className={`grid grid-cols-[44px_1fr_auto] sm:grid-cols-[64px_1fr_auto] md:grid-cols-[80px_1fr_auto] items-center rounded-2xl border px-3.5 sm:px-5 py-3 sm:py-4 transition-all duration-300 ${
+                className={`grid grid-cols-[38px_1fr_auto] sm:grid-cols-[64px_1fr_auto] md:grid-cols-[80px_1fr_auto] items-center rounded-xl sm:rounded-2xl border px-3 sm:px-5 py-2.5 sm:py-4 transition-all duration-300 ${
                   row.rank === 1
                     ? "border-[#e4b84a]/40 bg-gradient-to-r from-[#e4b84a]/[0.12] via-white/[0.04] to-transparent shadow-lg shadow-[#e4b84a]/[0.08]"
                     : row.rank === 2
@@ -292,7 +292,7 @@ export function ScoreboardClient({
                 }}
               >
                 <span
-                  className={`display text-xl sm:text-2xl md:text-3xl font-extrabold ${
+                  className={`display text-lg sm:text-2xl md:text-3xl font-extrabold ${
                     row.rank === 1
                       ? "text-[#e4b84a]"
                       : row.rank === 2
@@ -306,27 +306,27 @@ export function ScoreboardClient({
                 </span>
 
                 <div className="min-w-0 pr-2 sm:pr-4">
-                  <span className="display block text-base sm:text-lg md:text-2xl font-bold text-white truncate leading-tight">
+                  <span className="display block text-sm sm:text-lg md:text-2xl font-bold text-white truncate leading-tight">
                     {row.tribeName}
                   </span>
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1 text-[11px] sm:text-xs text-white/45">
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-white/45">
                     <span className="font-mono text-[10px] sm:text-[11px] font-bold text-[#e4b84a]/80">{row.tribeCode}</span>
                     <span className="text-white/20">·</span>
                     <span className="truncate">{row.groupName ? `${row.groupName} · ${row.theme}` : row.theme}</span>
                     {row.location && (
                       <>
-                        <span className="text-white/20">·</span>
-                        <span className="text-white/60 truncate">📍 {row.location}</span>
+                        <span className="text-white/20 hidden sm:inline">·</span>
+                        <span className="text-white/60 truncate hidden sm:inline">📍 {row.location}</span>
                       </>
                     )}
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="display text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#e4b84a] tracking-tight tabular-nums">
+                  <span className="display text-xl sm:text-3xl md:text-4xl font-extrabold text-[#e4b84a] tracking-tight tabular-nums">
                     {row.totalScore}
                   </span>
-                  <span className="block text-[8px] sm:text-[10px] uppercase tracking-[0.18em] text-white/30 font-semibold">pts</span>
+                  <span className="block text-[7px] sm:text-[10px] uppercase tracking-[0.16em] text-white/30 font-semibold">pts</span>
                 </div>
               </div>
             ))

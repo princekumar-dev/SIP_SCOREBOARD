@@ -66,25 +66,19 @@ export default async function TribePage({ params }: { params: Promise<{ id: stri
               return (
                 <div
                   key={member.id}
-                  className="sm:col-span-2 rounded-2xl border-2 border-[#e4b84a]/60 bg-gradient-to-r from-[#e4b84a]/15 via-[#4b1d7a]/10 to-white p-4 shadow-md shadow-[#e4b84a]/10 hover-lift animate-fade-in-up"
+                  className="rounded-xl sm:rounded-2xl border-2 border-[#e4b84a]/60 bg-gradient-to-r from-[#e4b84a]/15 via-[#4b1d7a]/10 to-white p-3.5 sm:p-4 shadow-md shadow-[#e4b84a]/10 hover-lift animate-fade-in-up flex flex-col justify-between"
                   style={{ animationDelay: `${0.3 + i * 0.03}s` }}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="grid h-8 w-8 place-items-center rounded-xl bg-[#e4b84a] text-[#12071f] text-sm font-bold shadow-xs">
-                        👑
-                      </span>
-                      <div>
-                        <p className="font-extrabold text-base text-[#12071f]">{member.name}</p>
-                        <p className="text-xs text-[#4b1d7a] font-semibold mt-0.5">
-                          {formatMemberMeta(member.department, member.classSection)}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="rounded-full bg-[#12071f] px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[#e4b84a] shadow-xs">
-                      Team Lead
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-extrabold text-sm sm:text-base text-[#12071f] truncate">{member.name}</p>
+                    <span className="rounded-full bg-[#12071f] px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-[#e4b84a] shadow-xs shrink-0 flex items-center gap-1">
+                      <span>👑</span>
+                      <span>Lead</span>
                     </span>
                   </div>
+                  <p className="text-xs text-[#4b1d7a] font-semibold mt-1">
+                    {formatMemberMeta(member.department, member.classSection)}
+                  </p>
                 </div>
               );
             }

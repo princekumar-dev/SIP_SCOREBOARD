@@ -74,29 +74,29 @@ export default async function HomePage() {
         <div className="absolute top-0 right-0 w-[550px] h-[450px] bg-[#e4b84a]/[0.09] rounded-full blur-[140px] pointer-events-none animate-pulse-glow" />
         <div className="absolute bottom-0 left-0 w-[450px] h-[350px] bg-[#4b1d7a]/35 rounded-full blur-[120px] pointer-events-none" />
         
-        <div className="relative mx-auto max-w-6xl px-4 sm:px-5 py-14 sm:py-20 md:py-28">
+        <div className="relative mx-auto max-w-6xl px-3.5 sm:px-5 py-10 sm:py-20 md:py-28">
           <div className="animate-fade-in-up">
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 mb-3.5 sm:mb-6">
               <BrandLogo size="md" variant="badge" priority />
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-[#e4b84a]/30 bg-[#e4b84a]/[0.1] px-3 sm:px-4 py-1 sm:py-1.5 backdrop-blur-md max-w-full">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-[#e4b84a]/30 bg-[#e4b84a]/[0.1] px-2.5 sm:px-4 py-1 sm:py-1.5 backdrop-blur-md max-w-full">
                 <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-[#e4b84a] animate-pulse shrink-0" />
-                <p className="text-[8px] sm:text-[10px] font-bold tracking-[0.14em] sm:tracking-[0.25em] text-[#e4b84a] truncate">
+                <p className="text-[8px] sm:text-[10px] font-bold tracking-[0.1em] sm:tracking-[0.25em] text-[#e4b84a] truncate">
                   MEENAKSHI SUNDARARAJAN ENGINEERING COLLEGE
                 </p>
               </div>
             </div>
-            <h1 className="display max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] leading-[1.08] tracking-tight">
+            <h1 className="display max-w-4xl text-3xl sm:text-5xl md:text-7xl lg:text-[5.5rem] leading-[1.08] tracking-tight">
               <span className="text-gradient-gold">SIP Arena</span>
             </h1>
-            <p className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl text-[#f7f1e6]/70 max-w-2xl leading-relaxed font-normal">
+            <p className="mt-2.5 sm:mt-4 text-sm sm:text-lg md:text-xl text-[#f7f1e6]/70 max-w-2xl leading-relaxed font-normal">
               Student Induction Program 2026–27 · 90 Tribes · 5 Houses · Live Arena Scoreboard
             </p>
           </div>
 
-          <div className="gold-line my-7 sm:my-10 animate-fade-in delay-2" />
+          <div className="gold-line my-6 sm:my-10 animate-fade-in delay-2" />
 
           {/* Quick Metrics */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-4">
             {[
               [stats.tribes, "Competing Tribes", "🛡️"],
               [stats.venues, "Evaluation Halls", "🏛️"],
@@ -105,20 +105,20 @@ export default async function HomePage() {
             ].map(([value, label, icon], i) => (
               <div
                 key={String(label)}
-                className="group rounded-2xl sm:rounded-3xl border border-white/[0.09] bg-white/[0.04] backdrop-blur-md p-3.5 sm:p-5 animate-fade-in-up cursor-default tilt-hover relative overflow-hidden"
+                className="group rounded-2xl sm:rounded-3xl border border-white/[0.09] bg-white/[0.04] backdrop-blur-md p-3 sm:p-5 animate-fade-in-up cursor-default tilt-hover relative overflow-hidden"
                 style={{ animationDelay: `${0.15 + i * 0.08}s` }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#e4b84a]/[0.06] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="flex items-center justify-between">
-                  <p className="relative display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gradient-gold tabular-nums">{value}</p>
-                  <span className="text-xl sm:text-2xl opacity-70 group-hover:scale-125 transition-transform duration-300">{icon}</span>
+                  <p className="relative display text-xl sm:text-3xl md:text-4xl font-extrabold text-gradient-gold tabular-nums">{value}</p>
+                  <span className="text-lg sm:text-2xl opacity-70 group-hover:scale-125 transition-transform duration-300">{icon}</span>
                 </div>
-                <p className="relative text-[11px] sm:text-xs text-[#f7f1e6]/60 font-medium mt-1.5 sm:mt-2 truncate">{label}</p>
+                <p className="relative text-[10px] sm:text-xs text-[#f7f1e6]/60 font-medium mt-1 sm:mt-2 truncate">{label}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 animate-fade-in-up delay-6">
+          <div className="mt-7 sm:mt-10 flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-4 animate-fade-in-up delay-6">
             <Link href="/overall" className="btn-gold w-full sm:w-auto text-center justify-center flex items-center !py-3 sm:!py-3.5 !px-6 sm:!px-8 !text-xs sm:!text-sm shadow-xl shadow-[#e4b84a]/25">
               🏆 Overall Standings
             </Link>

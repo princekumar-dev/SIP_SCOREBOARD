@@ -579,34 +579,35 @@ export default function ScoresPage() {
                 return (
                   <div
                     key={tribe.tribeId}
-                    className={`grid grid-cols-1 md:grid-cols-12 items-center gap-3 px-4 sm:px-6 py-3.5 sm:py-4 transition-colors ${
+                    className={`grid grid-cols-1 md:grid-cols-12 items-center gap-3 px-3.5 sm:px-6 py-3 sm:py-4 transition-colors ${
                       isSaved ? "bg-emerald-50/70" : "hover:bg-white/60"
                     }`}
                   >
                     {/* Index & Tribe Info */}
-                    <div className="md:col-span-5 flex items-center gap-3">
-                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-[#4b1d7a]/10 text-xs font-bold text-[#4b1d7a]">
+                    <div className="md:col-span-5 flex items-center gap-2.5 sm:gap-3">
+                      <span className="grid h-6 w-6 sm:h-7 sm:w-7 shrink-0 place-items-center rounded-lg sm:rounded-xl bg-[#4b1d7a]/10 text-xs font-bold text-[#4b1d7a]">
                         {index + 1}
                       </span>
-                      <div>
-                        <span className="block font-bold text-sm md:text-base text-[#12071f]">
+                      <div className="min-w-0 flex-1">
+                        <span className="block font-bold text-sm sm:text-base text-[#12071f] truncate">
                           {tribe.tribeName}
                         </span>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="font-mono text-xs font-bold text-[#4b1d7a] bg-[#4b1d7a]/8 px-1.5 py-0.2 rounded">
+                        <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5">
+                          <span className="font-mono text-[11px] sm:text-xs font-bold text-[#4b1d7a] bg-[#4b1d7a]/8 px-1.5 py-0.2 rounded">
                             {tribe.tribeCode}
                           </span>
                           <span className="text-[10px] text-[#6d6178]">·</span>
-                          <span className="text-xs text-[#6d6178]">
-                            Total Points: <strong className="text-[#12071f] font-bold">{tribe.totalScore}</strong>
+                          <span className="text-[11px] sm:text-xs text-[#6d6178] truncate">
+                            Total: <strong className="text-[#12071f] font-bold">{tribe.totalScore} pts</strong>
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Score Input */}
-                    <div className="md:col-span-3 flex items-center gap-2">
-                      <div className="relative w-full">
+                    {/* Mobile Controls Container (Score + Remarks + Action) */}
+                    <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2 sm:gap-2.5 items-center">
+                      {/* Score Input */}
+                      <div className="md:col-span-3 relative w-full">
                         <input
                           type="number"
                           min={0}
@@ -615,48 +616,48 @@ export default function ScoresPage() {
                           onChange={(e) =>
                             setScoresInput({ ...scoresInput, [tribe.tribeId]: e.target.value })
                           }
-                          placeholder="Score (0-100)"
+                          placeholder="Score"
                           className="w-full rounded-xl border border-[#4b1d7a]/25 bg-white px-3 py-2 text-sm font-bold text-[#12071f] outline-none transition focus:border-[#4b1d7a] focus:ring-2 focus:ring-[#4b1d7a]/15"
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#6d6178]">
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#6d6178] pointer-events-none">
                           / {activeEvent?.maximumScore || 100}
                         </span>
                       </div>
-                    </div>
 
-                    {/* Remarks Input */}
-                    <div className="md:col-span-2">
-                      <input
-                        type="text"
-                        value={remarksInput[tribe.tribeId] || ""}
-                        onChange={(e) =>
-                          setRemarksInput({ ...remarksInput, [tribe.tribeId]: e.target.value })
-                        }
-                        placeholder="Remarks (optional)"
-                        className="w-full rounded-xl border border-[#4b1d7a]/15 bg-white px-3 py-2 text-xs text-[#12071f] outline-none transition focus:border-[#4b1d7a]"
-                      />
-                    </div>
+                      {/* Remarks Input */}
+                      <div className="md:col-span-2">
+                        <input
+                          type="text"
+                          value={remarksInput[tribe.tribeId] || ""}
+                          onChange={(e) =>
+                            setRemarksInput({ ...remarksInput, [tribe.tribeId]: e.target.value })
+                          }
+                          placeholder="Remarks (opt)"
+                          className="w-full rounded-xl border border-[#4b1d7a]/15 bg-white px-3 py-2 text-xs text-[#12071f] outline-none transition focus:border-[#4b1d7a]"
+                        />
+                      </div>
 
-                    {/* Action Button */}
-                    <div className="md:col-span-2 text-right">
-                      <button
-                        type="button"
-                        onClick={() => saveSingleScore(tribe.tribeId)}
-                        disabled={isSaving}
-                        className={`w-full md:w-auto rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 ${
-                          isSaved
-                            ? "bg-emerald-600 text-white"
-                            : "bg-[#12071f] text-[#e4b84a] hover:bg-[#25103a]"
-                        } disabled:opacity-50`}
-                      >
-                        {isSaving ? (
-                          <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#e4b84a] border-t-transparent" />
-                        ) : isSaved ? (
-                          "✓ Saved"
-                        ) : (
-                          "Save Score"
-                        )}
-                      </button>
+                      {/* Action Button */}
+                      <div className="md:col-span-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => saveSingleScore(tribe.tribeId)}
+                          disabled={isSaving}
+                          className={`w-full rounded-xl px-3 sm:px-4 py-2 text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer ${
+                            isSaved
+                              ? "bg-emerald-600 text-white"
+                              : "bg-[#12071f] text-[#e4b84a] hover:bg-[#25103a]"
+                          } disabled:opacity-50`}
+                        >
+                          {isSaving ? (
+                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#e4b84a] border-t-transparent" />
+                          ) : isSaved ? (
+                            "✓ Saved"
+                          ) : (
+                            "Save Score"
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );

@@ -29,40 +29,40 @@ function PodiumCard({
   return (
     <Link
       href={`/tribe/${row.id}`}
-      className={`panel block p-4 sm:p-6 text-center hover-lift tilt-hover animate-pop-in group relative overflow-hidden ${podiumClass} rounded-2xl sm:rounded-3xl`}
+      className={`panel block p-3.5 sm:p-5 md:p-6 text-center hover-lift tilt-hover animate-pop-in group relative overflow-hidden ${podiumClass} rounded-2xl sm:rounded-3xl`}
       style={{ animationDelay: `${delay}s` }}
     >
       <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-transparent via-[#e4b84a]/60 to-transparent" />
-      <span className="inline-block rounded-full bg-black/10 px-2.5 sm:px-3 py-0.5 sm:py-1 text-[9px] sm:text-[10px] tracking-[0.2em] sm:tracking-[0.25em] font-extrabold uppercase text-[#12071f]/80">
+      <span className="inline-block rounded-full bg-black/10 px-2 sm:px-3 py-0.5 sm:py-1 text-[8px] sm:text-[10px] tracking-[0.16em] sm:tracking-[0.25em] font-extrabold uppercase text-[#12071f]/80">
         {place}
       </span>
       
-      <div className="relative my-2 sm:my-3">
-        <span className={`inline-block text-4xl sm:text-5xl transition-transform duration-300 group-hover:scale-125 ${isFirst ? "animate-trophy" : "animate-float"}`}>
+      <div className="relative my-1.5 sm:my-3">
+        <span className={`inline-block text-3xl sm:text-4xl md:text-5xl transition-transform duration-300 group-hover:scale-125 ${isFirst ? "animate-trophy" : "animate-float"}`}>
           {medal}
         </span>
       </div>
 
-      <p className="display text-xl sm:text-2xl font-bold text-[#12071f] transition-colors group-hover:text-[#4b1d7a] leading-tight truncate px-2">
+      <p className="display text-base sm:text-xl md:text-2xl font-bold text-[#12071f] transition-colors group-hover:text-[#4b1d7a] leading-tight truncate px-1 sm:px-2">
         {row.tribeName}
       </p>
       
-      <div className="mt-2 flex items-center justify-center gap-1.5">
-        <span className="font-mono text-xs font-bold text-[#4b1d7a] bg-[#4b1d7a]/10 px-2 py-0.5 rounded-md">
+      <div className="mt-1.5 sm:mt-2 flex items-center justify-center gap-1 sm:gap-1.5 flex-wrap">
+        <span className="font-mono text-[11px] sm:text-xs font-bold text-[#4b1d7a] bg-[#4b1d7a]/10 px-1.5 sm:px-2 py-0.5 rounded-md">
           {row.tribeCode}
         </span>
         {row.groupName ? (
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${GROUP_TAG_STYLES[row.groupName] || "bg-gray-100 text-gray-700"}`}>
+          <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md border ${GROUP_TAG_STYLES[row.groupName] || "bg-gray-100 text-gray-700"}`}>
             {row.groupName}
           </span>
         ) : null}
       </div>
 
-      <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-[#4b1d7a]/10">
-        <p className="display text-3xl sm:text-4xl font-extrabold text-gradient-purple transition-transform group-hover:scale-105 tabular-nums">
+      <div className="mt-2.5 sm:mt-4 pt-2 sm:pt-3 border-t border-[#4b1d7a]/10">
+        <p className="display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gradient-purple transition-transform group-hover:scale-105 tabular-nums leading-none">
           {row.totalScore}
         </p>
-        <p className="text-[9px] sm:text-[10px] font-bold text-[#6d6178] tracking-widest uppercase mt-0.5">Total Points</p>
+        <p className="text-[8px] sm:text-[10px] font-bold text-[#6d6178] tracking-widest uppercase mt-1">Total Points</p>
       </div>
     </Link>
   );
@@ -89,7 +89,7 @@ export function LeaderboardTable({
 
   return (
     <div className="panel overflow-hidden animate-fade-in shadow-md">
-      <div className="grid grid-cols-[38px_1fr_auto] sm:grid-cols-[48px_1fr_auto] md:grid-cols-[56px_1fr_1fr_auto] gap-2 sm:gap-3 border-b border-[#4b1d7a]/10 bg-[#4b1d7a]/[0.03] px-3.5 sm:px-5 py-3 sm:py-3.5 text-[9px] sm:text-[10px] uppercase tracking-[0.16em] sm:tracking-[0.2em] text-[#4b1d7a] font-bold">
+      <div className="grid grid-cols-[34px_1fr_auto] sm:grid-cols-[48px_1fr_auto] md:grid-cols-[56px_1fr_1fr_auto] gap-2 sm:gap-3 border-b border-[#4b1d7a]/10 bg-[#4b1d7a]/[0.03] px-3 sm:px-5 py-2.5 sm:py-3.5 text-[8px] sm:text-[10px] uppercase tracking-[0.14em] sm:tracking-[0.2em] text-[#4b1d7a] font-bold">
         <span className="text-center">Rank</span>
         <span>Tribe & House</span>
         {showVenue ? <span className="hidden md:block">Active Theme</span> : null}
@@ -99,7 +99,7 @@ export function LeaderboardTable({
         <Link
           key={row.id}
           href={`/tribe/${row.id}`}
-          className={`grid grid-cols-[38px_1fr_auto] sm:grid-cols-[48px_1fr_auto] md:grid-cols-[56px_1fr_1fr_auto] items-center gap-2 sm:gap-3 border-b border-[#4b1d7a]/[0.06] px-3.5 sm:px-5 py-3 sm:py-4 last:border-0 row-hover group animate-fade-in-up transition-all ${
+          className={`grid grid-cols-[34px_1fr_auto] sm:grid-cols-[48px_1fr_auto] md:grid-cols-[56px_1fr_1fr_auto] items-center gap-2 sm:gap-3 border-b border-[#4b1d7a]/[0.06] px-3 sm:px-5 py-2.5 sm:py-4 last:border-0 row-hover group animate-fade-in-up transition-all ${
             row.rank === 1
               ? "bg-[#e4b84a]/[0.06] hover:bg-[#e4b84a]/[0.12]"
               : row.rank === 2
@@ -112,7 +112,7 @@ export function LeaderboardTable({
         >
           <div className="flex justify-center">
             <span
-              className={`display flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl text-xs sm:text-base font-extrabold shadow-xs ${
+              className={`display flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl text-[11px] sm:text-base font-extrabold shadow-xs ${
                 row.rank === 1
                   ? "bg-[#e4b84a] text-[#12071f] ring-2 ring-[#e4b84a]/40 shadow-amber-500/20"
                   : row.rank === 2
@@ -127,8 +127,8 @@ export function LeaderboardTable({
           </div>
 
           <div className="min-w-0 pr-1">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="font-bold text-sm sm:text-base text-[#12071f] transition-colors group-hover:text-[#4b1d7a] truncate">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <span className="font-bold text-xs sm:text-base text-[#12071f] transition-colors group-hover:text-[#4b1d7a] truncate">
                 {row.tribeName}
               </span>
               {row.groupName && (
@@ -137,8 +137,8 @@ export function LeaderboardTable({
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-xs text-[#6d6178] font-mono font-semibold">{row.tribeCode}</span>
+            <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5">
+              <span className="text-[11px] sm:text-xs text-[#6d6178] font-mono font-semibold">{row.tribeCode}</span>
               {row.groupName && (
                 <span className="sm:hidden text-[9px] font-bold text-[#4b1d7a]">
                   · {row.groupName}
@@ -155,10 +155,10 @@ export function LeaderboardTable({
           ) : null}
 
           <div className="text-right shrink-0">
-            <span className={`font-extrabold text-[#12071f] transition-all duration-200 group-hover:text-[#4b1d7a] group-hover:scale-105 tabular-nums ${compact ? "text-base sm:text-lg" : "text-xl sm:text-2xl"}`}>
+            <span className={`font-extrabold text-[#12071f] transition-all duration-200 group-hover:text-[#4b1d7a] group-hover:scale-105 tabular-nums ${compact ? "text-sm sm:text-lg" : "text-base sm:text-2xl"}`}>
               {row.totalScore}
             </span>
-            <span className="block text-[8px] sm:text-[9px] uppercase font-bold text-[#6d6178]/70">pts</span>
+            <span className="block text-[7px] sm:text-[9px] uppercase font-bold text-[#6d6178]/70">pts</span>
           </div>
         </Link>
       ))}
