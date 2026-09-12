@@ -78,7 +78,7 @@ export function TribesClient({
       {/* Controls Header */}
       <div className="space-y-4">
         {/* Search & Filter Bar */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 rounded-2xl border border-[#4b1d7a]/[0.1] bg-white/90 p-3.5 sm:p-4 backdrop-blur-xl shadow-sm">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 rounded-2xl border border-[#4b1d7a]/[0.08] bg-white/80 p-3.5 sm:p-4 backdrop-blur-xl shadow-[0_4px_24px_rgba(75,29,122,0.04),inset_0_1px_0_rgba(255,255,255,0.8)]">
           <div className="relative w-full flex-1">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#6d6178]">🔍</span>
             <input

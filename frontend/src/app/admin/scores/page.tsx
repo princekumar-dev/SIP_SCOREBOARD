@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AdminShell } from "@/components/AdminShell";
 import { apiGet, apiSend } from "@/lib/api";
 import { getToken } from "@/lib/auth";
@@ -44,6 +45,7 @@ const ALL_GROUPS = [
 ];
 
 export default function ScoresPage() {
+  const router = useRouter();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -77,6 +79,11 @@ export default function ScoresPage() {
       apiGet<EventItem[]>("/api/events"),
     ])
       .then(([user, vList, eList]) => {
+        if (user.role === "super_admin") {
+          router.replace("/admin");
+          return;
+        }
+
         setCurrentUser(user);
         setVenues(vList);
         setEvents(eList);

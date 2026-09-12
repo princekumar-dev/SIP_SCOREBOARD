@@ -96,7 +96,11 @@ export default function LoginPage() {
         return;
       }
       setToken(data.token);
-      router.push("/admin/scores");
+      if (data.user?.role === "super_admin" || loginEmail.includes("admin@")) {
+        router.push("/admin");
+      } else {
+        router.push("/admin/scores");
+      }
     } catch {
       setError("Unable to connect to backend server.");
       setLoading(false);

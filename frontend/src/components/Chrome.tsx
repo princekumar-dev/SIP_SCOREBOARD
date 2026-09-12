@@ -163,7 +163,7 @@ export function MobileNav() {
   ];
 
   return (
-    <nav className="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] left-3 right-3 sm:left-4 sm:right-4 z-40 grid grid-cols-4 max-w-lg mx-auto rounded-2xl border border-white/10 bg-[#12071f]/90 backdrop-blur-2xl saturate-[1.8] p-1.5 text-[10px] text-[#f7f1e6]/80 shadow-2xl shadow-black/50 md:hidden">
+    <nav className="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] left-3 right-3 sm:left-4 sm:right-4 z-40 grid grid-cols-4 max-w-lg mx-auto rounded-2xl border border-white/[0.12] bg-[#12071f]/80 backdrop-blur-[28px] saturate-[2] p-1.5 text-[10px] text-[#f7f1e6]/80 shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(228,184,74,0.06),inset_0_1px_0_rgba(255,255,255,0.06)] md:hidden">
       {items.map((item) => {
         const isActive = path === item.href;
         return (

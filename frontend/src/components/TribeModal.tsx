@@ -42,9 +42,9 @@ export function TribeModal({
   if (!tribeId) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-2.5 sm:p-4 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#090310]/80 p-2.5 sm:p-4 backdrop-blur-md animate-fade-in" onClick={onClose}>
       <div
-        className="relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl sm:rounded-3xl border border-[#e4b84a]/20 bg-[#12071f] p-4 sm:p-6 md:p-8 text-[#f7f1e6] shadow-2xl animate-scale-in"
+        className="relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl sm:rounded-3xl border border-white/[0.12] bg-[#12071f]/90 backdrop-blur-[24px] saturate-[1.6] p-4 sm:p-6 md:p-8 text-[#f7f1e6] shadow-[0_24px_64px_rgba(0,0,0,0.5),0_0_0_1px_rgba(228,184,74,0.08),inset_0_1px_0_rgba(255,255,255,0.06)] animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Ambient glow */}
@@ -78,15 +78,15 @@ export function TribeModal({
             <h2 className="display mt-2 sm:mt-3 text-2xl sm:text-3xl md:text-4xl font-bold text-[#f7f1e6] leading-tight">{data.tribeName}</h2>
 
             <div className="mt-4 sm:mt-6 grid grid-cols-3 gap-1.5 sm:gap-3">
-              <div className="rounded-xl sm:rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2 sm:p-4 text-center">
+              <div className="rounded-xl sm:rounded-2xl border border-white/[0.1] bg-white/[0.05] backdrop-blur-sm p-2 sm:p-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <p className="text-[7px] sm:text-[9px] tracking-[0.08em] sm:tracking-[0.18em] uppercase text-[#f7f1e6]/50 font-semibold truncate">Overall Rank</p>
                 <p className="display mt-1 sm:mt-2 text-lg sm:text-2xl font-bold text-[#e4b84a]">{rankLabel(data.overallRank)}</p>
               </div>
-              <div className="rounded-xl sm:rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2 sm:p-4 text-center">
+              <div className="rounded-xl sm:rounded-2xl border border-white/[0.1] bg-white/[0.05] backdrop-blur-sm p-2 sm:p-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <p className="text-[7px] sm:text-[9px] tracking-[0.08em] sm:tracking-[0.18em] uppercase text-[#f7f1e6]/50 font-semibold truncate">Group Rank</p>
                 <p className="display mt-1 sm:mt-2 text-lg sm:text-2xl font-bold text-[#f7f1e6]">{rankLabel(data.groupRank !== undefined ? data.groupRank : data.venueRank)}</p>
               </div>
-              <div className="rounded-xl sm:rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2 sm:p-4 text-center">
+              <div className="rounded-xl sm:rounded-2xl border border-white/[0.1] bg-white/[0.05] backdrop-blur-sm p-2 sm:p-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <p className="text-[7px] sm:text-[9px] tracking-[0.08em] sm:tracking-[0.18em] uppercase text-[#f7f1e6]/50 font-semibold truncate">Total Score</p>
                 <p className="display mt-1 sm:mt-2 text-lg sm:text-2xl font-bold text-[#e4b84a]">{data.totalScore}</p>
               </div>
@@ -101,7 +101,7 @@ export function TribeModal({
                   data.events.map((event) => (
                     <div
                       key={event.id}
-                      className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm"
+                      className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-sm px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-white/[0.06] transition-all"
                     >
                       <div className="min-w-0 pr-2">
                         <p className="font-medium text-white truncate">{event.eventName}</p>
@@ -148,7 +148,7 @@ export function TribeModal({
                   return (
                     <div
                       key={member.id}
-                      className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-2.5 sm:p-3 hover:bg-white/[0.07] hover:border-white/20 transition-all flex flex-col justify-between"
+                      className="rounded-xl border border-white/[0.1] bg-white/[0.05] backdrop-blur-sm p-2.5 sm:p-3 hover:bg-white/[0.08] hover:border-white/20 transition-all flex flex-col justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
                     >
                       <p className="text-xs sm:text-sm font-semibold text-white truncate">{member.name}</p>
                       <p className="text-[11px] sm:text-xs text-[#e4b84a]/70 mt-0.5 sm:mt-1">

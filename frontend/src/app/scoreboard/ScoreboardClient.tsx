@@ -248,6 +248,8 @@ export function ScoreboardClient({
       {/* Ambient glows */}
       <div className="absolute top-0 right-0 w-[600px] h-[400px] bg-[#e4b84a]/[0.05] rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[400px] bg-[#4b1d7a]/25 rounded-full blur-[100px] pointer-events-none" />
+      <div className="ambient-orb ambient-orb-gold w-[200px] h-[200px] top-[20%] right-[15%] opacity-40" style={{ animationDelay: "2s" }} />
+      <div className="ambient-orb ambient-orb-purple w-[180px] h-[180px] bottom-[25%] left-[25%] opacity-30" style={{ animationDelay: "6s" }} />
 
       <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-5 py-6 sm:py-8 md:px-8 flex-1 flex flex-col">
         {/* Top Header Section */}
@@ -280,7 +282,7 @@ export function ScoreboardClient({
 
             <Link
               href={hasToken ? "/admin" : "/"}
-              className="rounded-2xl border border-white/[0.12] bg-white/[0.06] px-4 sm:px-5 py-2 sm:py-2.5 text-xs font-bold text-white hover:bg-white/[0.1] hover:border-[#e4b84a]/40 hover:text-[#e4b84a] transition-all backdrop-blur-md flex items-center gap-1.5"
+              className="rounded-2xl border border-white/[0.12] bg-white/[0.06] backdrop-blur-md px-4 sm:px-5 py-2 sm:py-2.5 text-xs font-bold text-white hover:bg-white/[0.1] hover:border-[#e4b84a]/40 hover:text-[#e4b84a] transition-all flex items-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
             >
               <span>{hasToken ? "←" : "🏠"}</span>
               <span>{hasToken ? "Exit to Admin" : "Exit Scoreboard"}</span>
@@ -306,7 +308,7 @@ export function ScoreboardClient({
                   className={`rounded-2xl px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 ${
                     isSelected
                       ? "bg-gradient-to-r from-[#e4b84a] to-[#d4a332] text-[#12071f] shadow-lg shadow-[#e4b84a]/20 ring-1 ring-[#e4b84a]/30 scale-[1.02]"
-                      : "border border-white/[0.1] bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:border-white/20 hover:text-white"
+                      : "border border-white/[0.1] bg-white/[0.04] backdrop-blur-sm text-white/70 hover:bg-white/[0.08] hover:border-white/20 hover:text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                   }`}
                 >
                   <span>{grp.icon}</span>
@@ -337,11 +339,11 @@ export function ScoreboardClient({
                   key={`${row.id}-${selectedGroup}-${i}`}
                   className={`grid grid-cols-[38px_1fr_auto] sm:grid-cols-[64px_1fr_auto] md:grid-cols-[80px_1fr_auto] items-center rounded-xl sm:rounded-2xl border px-3 sm:px-5 py-2.5 sm:py-4 transition-all duration-300 ${
                     row.rank === 1
-                      ? "border-[#e4b84a]/40 bg-gradient-to-r from-[#e4b84a]/[0.12] via-white/[0.04] to-transparent shadow-lg shadow-[#e4b84a]/[0.08]"
+                      ? "border-[#e4b84a]/40 bg-gradient-to-r from-[#e4b84a]/[0.12] via-white/[0.04] to-transparent rank-glow-gold"
                       : row.rank === 2
-                      ? "border-slate-300/30 bg-gradient-to-r from-slate-300/[0.08] via-white/[0.04] to-transparent"
+                      ? "border-slate-300/30 bg-gradient-to-r from-slate-300/[0.08] via-white/[0.04] to-transparent rank-glow-silver"
                       : row.rank === 3
-                      ? "border-amber-600/30 bg-gradient-to-r from-amber-600/[0.08] via-white/[0.04] to-transparent"
+                      ? "border-amber-600/30 bg-gradient-to-r from-amber-600/[0.08] via-white/[0.04] to-transparent rank-glow-bronze"
                       : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05]"
                   }`}
                   style={{

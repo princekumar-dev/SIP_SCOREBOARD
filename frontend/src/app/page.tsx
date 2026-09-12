@@ -77,6 +77,9 @@ export default async function HomePage() {
         {/* Ambient glow effects */}
         <div className="absolute top-0 right-0 w-[550px] h-[450px] bg-[#e4b84a]/[0.09] rounded-full blur-[140px] pointer-events-none animate-pulse-glow" />
         <div className="absolute bottom-0 left-0 w-[450px] h-[350px] bg-[#4b1d7a]/35 rounded-full blur-[120px] pointer-events-none" />
+        <div className="ambient-orb ambient-orb-gold w-[300px] h-[300px] top-[10%] left-[60%] opacity-60" style={{ animationDelay: "0s" }} />
+        <div className="ambient-orb ambient-orb-purple w-[250px] h-[250px] bottom-[15%] right-[10%] opacity-50" style={{ animationDelay: "4s" }} />
+        <div className="ambient-orb ambient-orb-violet w-[200px] h-[200px] top-[50%] left-[20%] opacity-40" style={{ animationDelay: "8s" }} />
         
         <div className="relative mx-auto max-w-6xl px-3.5 sm:px-5 py-10 sm:py-20 md:py-28">
           <div className="animate-fade-in-up">
@@ -109,7 +112,7 @@ export default async function HomePage() {
             ].map(([value, label, icon], i) => (
               <div
                 key={String(label)}
-                className="group rounded-2xl sm:rounded-3xl border border-white/[0.09] bg-white/[0.04] backdrop-blur-md p-3 sm:p-5 animate-fade-in-up cursor-default tilt-hover relative overflow-hidden"
+                className="group rounded-2xl sm:rounded-3xl border border-white/[0.09] bg-white/[0.04] backdrop-blur-md p-3 sm:p-5 animate-fade-in-up cursor-default tilt-hover relative overflow-hidden border-shimmer"
                 style={{ animationDelay: `${0.15 + i * 0.08}s` }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#e4b84a]/[0.06] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

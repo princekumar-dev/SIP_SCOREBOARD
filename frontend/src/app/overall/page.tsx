@@ -11,8 +11,12 @@ export default async function OverallPage() {
     const topRows = board.rows || [];
 
     return (
-      <div className="mx-auto max-w-6xl px-4 sm:px-5 py-8 sm:py-12 space-y-8 sm:space-y-10">
-        <div className="animate-fade-in-up">
+      <div className="mx-auto max-w-6xl px-4 sm:px-5 py-8 sm:py-12 space-y-8 sm:space-y-10 relative">
+        {/* Ambient orbs for depth */}
+        <div className="absolute top-20 right-10 w-[300px] h-[300px] bg-[#e4b84a]/[0.04] rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-20 left-10 w-[250px] h-[250px] bg-[#4b1d7a]/[0.06] rounded-full blur-[80px] pointer-events-none" />
+
+        <div className="animate-fade-in-up relative">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#4b1d7a]/10 border border-[#4b1d7a]/15 px-3.5 py-1 mb-3 sm:mb-4">
             <span className="h-1.5 w-1.5 rounded-full bg-[#35d07f] animate-pulse" />
             <span className="text-[10px] font-bold tracking-[0.22em] text-[#4b1d7a] uppercase">Arena Overall Standings</span>
