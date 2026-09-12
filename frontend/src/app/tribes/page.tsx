@@ -27,10 +27,10 @@ export default async function TribesPage() {
             Tribe Directory
           </span>
           <span className="text-[10px] text-[#e4b84a]/50">·</span>
-          <span className="text-[10px] text-[#e4b84a]/60">90 Multidisciplinary Teams · 5 Groups</span>
+          <span className="text-[10px] text-[#e4b84a]/60">{tribes.length || 91} Multidisciplinary Teams · 5 Groups</span>
         </div>
         <h1 className="display text-4xl md:text-5xl font-extrabold text-[#12071f] tracking-tight">
-          All 90 Competing Tribes
+          All {tribes.length || 91} Competing Tribes
         </h1>
         <p className="mt-3 text-sm text-[#6d6178] max-w-2xl leading-relaxed">
           Search and filter across all 5 groups, inspect student members and departments, and track cumulative rankings.

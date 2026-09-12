@@ -314,7 +314,7 @@ export default function ScoresPage() {
             </h1>
             <p className="text-xs text-[#6d6178] mt-0.5">
               Host Location: <strong className="text-[#4b1d7a]">{activeVenue?.location || "No Venue Allocated"}</strong>
-              {selectedGroupName ? ` · 18 Competing Teams` : " · Please select a group below to start scoring"}
+              {selectedGroupName ? ` · ${tribeRows.length} Competing Teams` : " · Please select a group below to start scoring"}
             </p>
           </div>
 
@@ -389,6 +389,8 @@ export default function ScoresPage() {
                     ? "bg-gradient-to-br from-[#12071f] via-[#2d2208] to-[#12071f] text-white border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-amber-900/30"
                     : "bg-gradient-to-br from-[#12071f] via-[#331405] to-[#12071f] text-white border-orange-400 ring-2 ring-orange-400/40 shadow-lg shadow-orange-900/30";
 
+                const teamCount = g.groupName === "Group V" ? 19 : 18;
+
                 return (
                   <button
                     key={g.groupName}
@@ -408,7 +410,7 @@ export default function ScoresPage() {
                     </div>
                     <p className="font-extrabold text-xs mt-2.5 leading-snug">{g.theme}</p>
                     <div className="mt-2 flex items-center justify-between text-[10px]">
-                      <span className="opacity-70 font-semibold">18 Teams</span>
+                      <span className="opacity-70 font-semibold">{teamCount} Teams</span>
                       {isSelected && (
                         <span className="h-2 w-2 rounded-full bg-[#35d07f] animate-pulse" />
                       )}

@@ -148,9 +148,10 @@ export function TribesClient({
                 : "bg-white text-[#12071f] border border-[#4b1d7a]/15 hover:border-[#4b1d7a]/30"
             }`}
           >
-            All Groups (90)
+            All Groups ({tribesList.length})
           </button>
           {GROUPS.map((g, idx) => {
+            const count = tribesList.filter((t) => t.groupName === g.groupName).length || (g.groupName === "Group V" ? 19 : 18);
             const isActive = activeGroup === g.groupName;
             const activeClass =
               idx === 0
@@ -184,7 +185,7 @@ export function TribesClient({
                 }`}
               >
                 <span>{g.icon}</span>
-                <span>{g.groupName}: {g.theme} (18)</span>
+                <span>{g.groupName}: {g.theme} ({count})</span>
               </button>
             );
           })}

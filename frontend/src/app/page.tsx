@@ -3,7 +3,7 @@ import { apiGet } from "@/lib/api";
 import { Podium } from "@/components/LeaderboardTable";
 import { LiveLeaderboard } from "@/components/LiveLeaderboard";
 import { BrandLogo } from "@/components/BrandLogo";
-import type { LeaderboardRow, Venue } from "@/lib/types";
+import type { LeaderboardRow, Venue, TribeSummary } from "@/lib/types";
 
 export const revalidate = 30;
 
@@ -53,18 +53,22 @@ const HOUSES_CONFIG = [
 export default async function HomePage() {
   let venues: Venue[] = [];
   let board: { lastUpdated: string; rows: LeaderboardRow[] } = { lastUpdated: new Date().toISOString(), rows: [] };
-  let stats = { tribes: 90, venues: 5, events: 5, scores: 0 };
+  let stats = { tribes: 91, venues: 5, events: 5, scores: 0 };
+  let allTribes: TribeSummary[] = [];
   let error = "";
 
   try {
-    [venues, board, stats] = await Promise.all([
+    [venues, board, stats, allTribes] = await Promise.all([
       apiGet<Venue[]>("/api/venues"),
       apiGet<{ lastUpdated: string; rows: LeaderboardRow[] }>("/api/leaderboard"),
       apiGet<{ tribes: number; venues: number; events: number; scores: number }>("/api/stats"),
+      apiGet<TribeSummary[]>("/api/tribes"),
     ]);
   } catch {
     error = "Connection temporarily unavailable. Start MongoDB and the Node API, then refresh.";
   }
+
+  const totalTribes = stats.tribes || allTribes.length || 91;
 
   return (
     <div className="space-y-4 overflow-x-hidden">
@@ -89,7 +93,7 @@ export default async function HomePage() {
               <span className="text-gradient-gold">SIP Arena</span>
             </h1>
             <p className="mt-2.5 sm:mt-4 text-sm sm:text-lg md:text-xl text-[#f7f1e6]/70 max-w-2xl leading-relaxed font-normal">
-              Student Induction Program 2026–27 · 90 Tribes · 5 Houses · Live Arena Scoreboard
+              Student Induction Program 2026–27 · {totalTribes} Tribes · 5 Houses · Live Arena Scoreboard
             </p>
           </div>
 
@@ -98,7 +102,7 @@ export default async function HomePage() {
           {/* Quick Metrics */}
           <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-4">
             {[
-              [stats.tribes, "Competing Tribes", "🛡️"],
+              [totalTribes, "Competing Tribes", "🛡️"],
               [stats.venues, "Evaluation Halls", "🏛️"],
               [stats.events, "Active Events", "⚡"],
               [stats.scores, "Scores Streamed", "📊"],
@@ -123,7 +127,7 @@ export default async function HomePage() {
               🏆 Overall Standings
             </Link>
             <Link href="/tribes" className="btn-outline w-full sm:w-auto text-center justify-center flex items-center !py-3 sm:!py-3.5 !px-6 sm:!px-8 !text-xs sm:!text-sm hover:bg-white/10">
-              Explore 90 Tribes →
+              Explore {totalTribes} Tribes →
             </Link>
             <Link href="/scoreboard" target="_blank" className="btn-dark w-full sm:w-auto text-center justify-center flex items-center !py-3 sm:!py-3.5 !px-5 sm:!px-6 !text-xs sm:!text-sm border border-white/10">
               📺 Projector View
@@ -147,6 +151,7 @@ export default async function HomePage() {
 
         <div className="grid gap-3.5 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
           {HOUSES_CONFIG.map((houseConfig, i) => {
+            const houseTribeCount = allTribes.filter((t) => t.groupName === houseConfig.groupName).length || (houseConfig.groupName === "Group V" ? 19 : 18);
             return (
               <Link
                 key={houseConfig.groupName}
@@ -165,7 +170,7 @@ export default async function HomePage() {
                   </h3>
                 </div>
                 <div className="mt-6 pt-3.5 border-t border-black/[0.06] flex items-center justify-between text-xs font-bold">
-                  <span className={houseConfig.accentText}>18 Tribes</span>
+                  <span className={houseConfig.accentText}>{houseTribeCount} Tribes</span>
                   <span className="text-[#12071f] transition-transform group-hover:translate-x-1">→</span>
                 </div>
               </Link>

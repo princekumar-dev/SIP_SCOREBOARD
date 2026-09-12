@@ -154,7 +154,7 @@ export function ScoreboardClient({
 
   // Build group list dynamically with guaranteed unique keys (shown only on overall / multi-hall projector)
   const groupsList = useMemo(() => {
-    const all = { id: "all", label: "Overall (90 Tribes)", icon: "🏆", location: undefined as string | undefined };
+    const all = { id: "all", label: `Overall (${rows.length || 91} Tribes)`, icon: "🏆", location: undefined as string | undefined };
     const groupButtons = [
       { id: "Group I", label: "Group I · Creative & Design", icon: "🎨" },
       { id: "Group II", label: "Group II · Technology & Innovation", icon: "💻" },
@@ -173,7 +173,7 @@ export function ScoreboardClient({
       };
     });
     return [all, ...groupButtons];
-  }, [venues]);
+  }, [venues, rows.length]);
 
   return (
     <div className="scoreboard-bg min-h-screen text-[#f7f1e6] flex flex-col justify-between relative">
@@ -208,7 +208,7 @@ export function ScoreboardClient({
                   ? venue.location && venue.location !== "No Venue Allocated"
                     ? `${venue.location} (${venue.venueName || "Station"}) · ${filteredRows.length} Competing Tribes`
                     : `No Venue Allocated · ${filteredRows.length} Competing Tribes`
-                  : "All 5 Campus Halls · 90 Competing Tribes"}
+                  : `All 5 Campus Halls · ${rows.length || 91} Competing Tribes`}
               </span>
             </p>
           </div>

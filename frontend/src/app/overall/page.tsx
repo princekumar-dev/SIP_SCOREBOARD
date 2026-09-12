@@ -21,7 +21,7 @@ export default async function OverallPage() {
             Overall SIP Tribe Ranking
           </h1>
           <p className="mt-2 sm:mt-3 max-w-2xl text-xs sm:text-sm text-[#6d6178] leading-relaxed font-medium">
-            All 90 tribes across 5 Houses dynamically ranked by real-time cumulative scores.
+            All {board.rows.length || 91} tribes across 5 Houses dynamically ranked by real-time cumulative scores.
           </p>
         </div>
 
@@ -39,7 +39,7 @@ export default async function OverallPage() {
         {/* Full Leaderboard Table */}
         <div className="animate-fade-in-up delay-2">
           <LiveLeaderboard
-            title="Complete 90-Tribe Ranking"
+            title={`Complete ${board.rows.length || 91}-Tribe Ranking`}
             initialRows={board.rows}
             initialUpdated={board.lastUpdated}
             path="/api/leaderboard"

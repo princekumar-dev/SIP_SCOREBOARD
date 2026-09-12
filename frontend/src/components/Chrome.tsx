@@ -140,7 +140,7 @@ export function SiteFooter() {
         <div className="flex flex-col items-start gap-1.5 md:items-end">
           <div className="flex items-center gap-2 text-xs text-[#f7f1e6]/80 font-semibold">
             <span className="live-dot" />
-            <span>90 Tribes · 5 Venues · Live Dynamic Scoring</span>
+            <span>5 Houses · 5 Venues · Live Dynamic Scoring</span>
           </div>
           <p className="text-[11px] text-[#e4b84a]/70 font-medium tracking-wide">
             Real-time Live Arena Scoreboard Platform

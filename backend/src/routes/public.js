@@ -110,8 +110,11 @@ async function getLeaderboardForIdentifier(param, res) {
 
 router.get("/venues", async (_req, res) => {
   const venues = await Venue.find().sort({ venueName: 1 }).lean();
-  const tribes = await Tribe.aggregate([{ $group: { _id: "$venueId", count: { $sum: 1 } } }]);
-  const counts = Object.fromEntries(tribes.map((t) => [String(t._id), t.count]));
+  const tribes = await Tribe.aggregate([
+    { $match: { status: "active" } },
+    { $group: { _id: "$groupName", count: { $sum: 1 } } },
+  ]);
+  const groupCounts = Object.fromEntries(tribes.map((t) => [String(t._id), t.count]));
   res.json(
     venues.map((venue) => {
       const isAllocated = Boolean(venue.groupName && GROUP_MAP[venue.groupName]);
@@ -128,7 +131,7 @@ router.get("/venues", async (_req, res) => {
         motif: isAllocated ? gInfo.motif : "neutral",
         participatingClasses: isAllocated ? gInfo.classes : [],
         isLocked: venue.isLocked,
-        tribeCount: isAllocated ? (counts[String(venue._id)] || 0) : 0,
+        tribeCount: isAllocated ? (groupCounts[venue.groupName] || 0) : 0,
         isAllocated,
       };
     })

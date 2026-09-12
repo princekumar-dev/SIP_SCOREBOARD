@@ -168,7 +168,7 @@ export default function TeamsPage() {
                 {isVenueHost
                   ? `${filteredTribes.length} Assigned Tribes`
                   : selectedGroup === "all"
-                  ? `All 90 Tribes · 5 Groups`
+                  ? `All ${tribes.length} Tribes · 5 Groups`
                   : `${filteredTribes.length} Tribes in ${selectedGroup}`}
               </span>
             </div>
@@ -176,7 +176,7 @@ export default function TeamsPage() {
               {isVenueHost
                 ? `${hostGroupName || "Assigned Group"}: ${currentUser?.venue?.theme || activeGroupData?.theme || "Tribes"}`
                 : selectedGroup === "all"
-                ? "All 90 Multidisciplinary Tribes"
+                ? `All ${tribes.length} Multidisciplinary Tribes`
                 : `${selectedGroup}: ${activeGroupData?.theme || "Tribes"}`}
             </h1>
             <p className="text-xs text-[#6d6178] mt-0.5">
@@ -265,26 +265,29 @@ export default function TeamsPage() {
                         : "bg-white text-[#12071f] border border-[#4b1d7a]/15 hover:bg-white/80"
                     }`}
                   >
-                    All Groups (90)
+                    All Groups ({tribes.length})
                   </button>
-                  {groupsFromVenues.map((g) => (
-                    <button
-                      key={g.groupName}
-                      type="button"
-                      onClick={() => {
-                        setSelectedGroup(g.groupName);
-                        setSelectedVenueId("all");
-                      }}
-                      className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                        selectedGroup === g.groupName
-                          ? "bg-[#4b1d7a] text-[#e4b84a] shadow-xs"
-                          : "bg-white text-[#12071f] border border-[#4b1d7a]/15 hover:bg-white/80"
-                      }`}
-                    >
-                      <span>{g.icon}</span>
-                      <span>{g.groupName}: {g.theme} (18)</span>
-                    </button>
-                  ))}
+                  {groupsFromVenues.map((g) => {
+                    const groupTribeCount = tribes.filter((t) => t.groupName === g.groupName).length || (g.groupName === "Group V" ? 19 : 18);
+                    return (
+                      <button
+                        key={g.groupName}
+                        type="button"
+                        onClick={() => {
+                          setSelectedGroup(g.groupName);
+                          setSelectedVenueId("all");
+                        }}
+                        className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                          selectedGroup === g.groupName
+                            ? "bg-[#4b1d7a] text-[#e4b84a] shadow-xs"
+                            : "bg-white text-[#12071f] border border-[#4b1d7a]/15 hover:bg-white/80"
+                        }`}
+                      >
+                        <span>{g.icon}</span>
+                        <span>{g.groupName}: {g.theme} ({groupTribeCount})</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
