@@ -10,12 +10,12 @@ import { getToken } from "@/lib/auth";
 import { apiSend } from "@/lib/api";
 import type { LeaderboardRow, Venue } from "@/lib/types";
 
-const GROUP_ICONS: Record<string, string> = {
-  "Group I": "🎨",
-  "Group II": "💻",
-  "Group III": "🚀",
-  "Group IV": "🛡️",
-  "Group V": "⚡",
+const GROUP_THEMES: Record<string, string> = {
+  "Group I": "Creative & Design",
+  "Group II": "Technology & Innovation",
+  "Group III": "Space & Cosmic",
+  "Group IV": "Legends & Mythology",
+  "Group V": "Power & Energy",
 };
 
 export function ScoreboardClient({
@@ -152,7 +152,7 @@ export function ScoreboardClient({
     return Array.from({ length: 8 }, (_, i) => filteredRows[(index + i) % filteredRows.length]);
   }, [filteredRows, index, isHostSpecific]);
 
-  // Build group list dynamically with guaranteed unique keys (shown only on overall / multi-hall projector)
+  // Build group list dynamically with guaranteed unique keys
   const groupsList = useMemo(() => {
     const all = { id: "all", label: `Overall (${rows.length || 91} Tribes)`, icon: "🏆", location: undefined as string | undefined };
     const groupButtons = [
@@ -175,6 +175,32 @@ export function ScoreboardClient({
     return [all, ...groupButtons];
   }, [venues, rows.length]);
 
+  // Active Title & Badge Computation
+  const activeGroupTitle = useMemo(() => {
+    if (selectedIdentifier === "all") {
+      return "Overall SIP Grand Leaderboard";
+    }
+    const matchedGroupName = venue?.groupName || (selectedIdentifier.startsWith("Group") ? selectedIdentifier : null);
+    if (matchedGroupName && GROUP_THEMES[matchedGroupName]) {
+      return `${matchedGroupName}: ${GROUP_THEMES[matchedGroupName]}`;
+    }
+    if (venue?.theme && venue.theme !== "Pending Group Selection") {
+      return venue.groupName ? `${venue.groupName}: ${venue.theme}` : venue.theme;
+    }
+    return `${selectedIdentifier} Standings`;
+  }, [selectedIdentifier, venue]);
+
+  const activeSubtitle = useMemo(() => {
+    if (!isHostSpecific) {
+      return `All 5 Campus Halls · ${rows.length || 91} Competing Tribes`;
+    }
+    if (venue?.location && venue.location !== "No Venue Allocated") {
+      const vName = venue.venueName ? ` (${venue.venueName})` : "";
+      return `📍 ${venue.location}${vName} · ${filteredRows.length} Competing Tribes`;
+    }
+    return `📍 ${selectedIdentifier} · ${filteredRows.length} Competing Tribes`;
+  }, [isHostSpecific, venue, selectedIdentifier, rows.length, filteredRows.length]);
+
   return (
     <div className="scoreboard-bg min-h-screen text-[#f7f1e6] flex flex-col justify-between relative">
       {/* Ambient glows */}
@@ -190,26 +216,17 @@ export function ScoreboardClient({
                 <span className="h-1.5 w-1.5 rounded-full bg-[#e4b84a] animate-pulse" />
                 <span className="text-[9px] sm:text-[10px] font-bold font-mono uppercase tracking-[0.14em] sm:tracking-[0.18em] text-[#e4b84a]">
                   {isHostSpecific
-                    ? `📍 Station Projector · ${venue?.location && venue.location !== "No Venue Allocated" ? venue.location : "Unallocated Station"}`
+                    ? `📍 Station Projector · ${venue?.location && venue.location !== "No Venue Allocated" ? venue.location : selectedIdentifier}`
                     : "Projector Grand Scoreboard"}
                 </span>
               </span>
               <span className="text-[10px] sm:text-[11px] text-white/45 font-medium">MSEC SIP 2026–27</span>
             </div>
             <h1 className="display text-2xl sm:text-3xl md:text-5xl font-extrabold text-white tracking-tight">
-              {venue
-                ? `${venue.groupName ? `${venue.groupName}: ` : ""}${venue.theme || "Leaderboard"}`
-                : "Overall SIP Grand Leaderboard"}
+              {activeGroupTitle}
             </h1>
             <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-[#e4b84a]/80 font-medium flex items-center gap-1.5">
-              <span>📍</span>
-              <span className="truncate">
-                {venue
-                  ? venue.location && venue.location !== "No Venue Allocated"
-                    ? `${venue.location} (${venue.venueName || "Station"}) · ${filteredRows.length} Competing Tribes`
-                    : `No Venue Allocated · ${filteredRows.length} Competing Tribes`
-                  : `All 5 Campus Halls · ${rows.length || 91} Competing Tribes`}
-              </span>
+              <span className="truncate">{activeSubtitle}</span>
             </p>
           </div>
 
@@ -231,105 +248,119 @@ export function ScoreboardClient({
           </div>
         </div>
 
-        {/* Group / Venue Switcher Bar — ONLY visible on Overall Multi-Hall Scoreboard, NOT on Station Projector */}
-        {!isHostSpecific && (
-          <div className="my-4 sm:my-5 flex overflow-x-auto no-scrollbar flex-nowrap md:flex-wrap items-center gap-2 pb-1 animate-fade-in">
-            {groupsList.map((grp) => {
-              const isSelected =
-                selectedIdentifier === grp.id ||
-                (grp.id !== "all" && venue?.groupName === grp.id);
-              return (
-                <button
-                  key={grp.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedIdentifier(grp.id);
-                    setIndex(0);
-                  }}
-                  className={`rounded-2xl px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                    isSelected
-                      ? "bg-gradient-to-r from-[#e4b84a] to-[#d4a332] text-[#12071f] shadow-lg shadow-[#e4b84a]/20 ring-1 ring-[#e4b84a]/30 scale-[1.02]"
-                      : "border border-white/[0.1] bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:border-white/20"
-                  }`}
-                >
-                  <span>{grp.icon}</span>
-                  <span>{grp.label}</span>
-                  {grp.location && (
-                    <span className="text-[10px] opacity-60 hidden md:inline">· {grp.location}</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {/* Group / Venue Switcher Bar — ALWAYS visible so users and hosts can seamlessly switch between groups and overall */}
+        <div className="my-4 sm:my-5 flex overflow-x-auto no-scrollbar flex-nowrap md:flex-wrap items-center gap-2 pb-1 animate-fade-in">
+          {groupsList.map((grp) => {
+            const isSelected =
+              selectedIdentifier === grp.id ||
+              (grp.id !== "all" && (
+                selectedIdentifier.toLowerCase() === grp.id.toLowerCase() ||
+                venue?.groupName?.toLowerCase() === grp.id.toLowerCase()
+              ));
+            return (
+              <button
+                key={grp.id}
+                type="button"
+                onClick={() => {
+                  setSelectedIdentifier(grp.id);
+                  setIndex(0);
+                }}
+                className={`rounded-2xl px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                  isSelected
+                    ? "bg-gradient-to-r from-[#e4b84a] to-[#d4a332] text-[#12071f] shadow-lg shadow-[#e4b84a]/20 ring-1 ring-[#e4b84a]/30 scale-[1.02]"
+                    : "border border-white/[0.1] bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:border-white/20"
+                }`}
+              >
+                <span>{grp.icon}</span>
+                <span>{grp.label}</span>
+                {grp.location && (
+                  <span className="text-[10px] opacity-60 hidden md:inline">· {grp.location}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
 
         {/* Scoreboard Rows */}
-        <div className="flex-1 space-y-2 sm:space-y-3 mt-3 sm:mt-4">
+        <div className="flex-1 space-y-2 sm:space-y-3 mt-2 sm:mt-3">
           {visible.length === 0 ? (
             <div className="py-16 sm:py-24 text-center rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-8 animate-fade-in">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4 opacity-30">📊</div>
-              <p className="text-base sm:text-xl font-bold text-white/70">No scores recorded yet for this station.</p>
+              <p className="text-base sm:text-xl font-bold text-white/70">No scores recorded yet for this group / station.</p>
               <p className="mt-1 text-xs text-white/40">Evaluations submitted by venue hosts will appear live here instantly.</p>
             </div>
           ) : (
-            visible.map((row, i) => (
-              <div
-                key={`${row.id}-${row.rank}-${i}`}
-                className={`grid grid-cols-[38px_1fr_auto] sm:grid-cols-[64px_1fr_auto] md:grid-cols-[80px_1fr_auto] items-center rounded-xl sm:rounded-2xl border px-3 sm:px-5 py-2.5 sm:py-4 transition-all duration-300 ${
-                  row.rank === 1
-                    ? "border-[#e4b84a]/40 bg-gradient-to-r from-[#e4b84a]/[0.12] via-white/[0.04] to-transparent shadow-lg shadow-[#e4b84a]/[0.08]"
-                    : row.rank === 2
-                    ? "border-slate-300/30 bg-gradient-to-r from-slate-300/[0.08] via-white/[0.04] to-transparent"
-                    : row.rank === 3
-                    ? "border-amber-600/30 bg-gradient-to-r from-amber-600/[0.08] via-white/[0.04] to-transparent"
-                    : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05]"
-                }`}
-                style={{
-                  opacity: transitioning ? 0 : 1,
-                  transform: transitioning ? "translateY(6px)" : "translateY(0)",
-                  transition: `opacity 0.35s ease, transform 0.35s ease`,
-                  animationDelay: `${i * 0.03}s`,
-                }}
-              >
-                <span
-                  className={`display text-lg sm:text-2xl md:text-3xl font-extrabold ${
+            visible.map((row, i) => {
+              const rowTheme = row.theme || row.venueTheme || (row.groupName ? GROUP_THEMES[row.groupName] : "");
+              return (
+                <div
+                  key={`${row.id}-${row.rank}-${i}`}
+                  className={`grid grid-cols-[38px_1fr_auto] sm:grid-cols-[64px_1fr_auto] md:grid-cols-[80px_1fr_auto] items-center rounded-xl sm:rounded-2xl border px-3 sm:px-5 py-2.5 sm:py-4 transition-all duration-300 ${
                     row.rank === 1
-                      ? "text-[#e4b84a]"
+                      ? "border-[#e4b84a]/40 bg-gradient-to-r from-[#e4b84a]/[0.12] via-white/[0.04] to-transparent shadow-lg shadow-[#e4b84a]/[0.08]"
                       : row.rank === 2
-                      ? "text-slate-300"
+                      ? "border-slate-300/30 bg-gradient-to-r from-slate-300/[0.08] via-white/[0.04] to-transparent"
                       : row.rank === 3
-                      ? "text-amber-500"
-                      : "text-white/30"
+                      ? "border-amber-600/30 bg-gradient-to-r from-amber-600/[0.08] via-white/[0.04] to-transparent"
+                      : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05]"
                   }`}
+                  style={{
+                    opacity: transitioning ? 0 : 1,
+                    transform: transitioning ? "translateY(6px)" : "translateY(0)",
+                    transition: `opacity 0.35s ease, transform 0.35s ease`,
+                    animationDelay: `${i * 0.03}s`,
+                  }}
                 >
-                  {row.rank ? rankLabel(row.rank) : i + 1}
-                </span>
-
-                <div className="min-w-0 pr-2 sm:pr-4">
-                  <span className="display block text-sm sm:text-lg md:text-2xl font-bold text-white truncate leading-tight">
-                    {row.tribeName}
+                  <span
+                    className={`display text-lg sm:text-2xl md:text-3xl font-extrabold ${
+                      row.rank === 1
+                        ? "text-[#e4b84a]"
+                        : row.rank === 2
+                        ? "text-slate-300"
+                        : row.rank === 3
+                        ? "text-amber-500"
+                        : "text-white/30"
+                    }`}
+                  >
+                    {row.rank ? rankLabel(row.rank) : i + 1}
                   </span>
-                  <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-white/45">
-                    <span className="font-mono text-[10px] sm:text-[11px] font-bold text-[#e4b84a]/80">{row.tribeCode}</span>
-                    <span className="text-white/20">·</span>
-                    <span className="truncate">{row.groupName ? `${row.groupName} · ${row.theme}` : row.theme}</span>
-                    {row.location && (
-                      <>
-                        <span className="text-white/20 hidden sm:inline">·</span>
-                        <span className="text-white/60 truncate hidden sm:inline">📍 {row.location}</span>
-                      </>
-                    )}
+
+                  <div className="min-w-0 pr-2 sm:pr-4">
+                    <span className="display block text-sm sm:text-lg md:text-2xl font-bold text-white truncate leading-tight">
+                      {row.tribeName}
+                    </span>
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-white/45">
+                      <span className="font-mono text-[10px] sm:text-[11px] font-bold text-[#e4b84a]/80">{row.tribeCode}</span>
+                      {row.groupName && (
+                        <>
+                          <span className="text-white/20">·</span>
+                          <span className="font-semibold text-white/70">{row.groupName}</span>
+                        </>
+                      )}
+                      {rowTheme && (
+                        <>
+                          <span className="text-white/20">·</span>
+                          <span className="truncate">{rowTheme}</span>
+                        </>
+                      )}
+                      {row.location && row.location !== "No Venue Allocated" && (
+                        <>
+                          <span className="text-white/20 hidden sm:inline">·</span>
+                          <span className="text-white/60 truncate hidden sm:inline">📍 {row.location}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <span className="display text-xl sm:text-3xl md:text-4xl font-extrabold text-[#e4b84a] tracking-tight tabular-nums">
+                      {row.totalScore}
+                    </span>
+                    <span className="block text-[7px] sm:text-[10px] uppercase tracking-[0.16em] text-white/30 font-semibold">pts</span>
                   </div>
                 </div>
-
-                <div className="text-right shrink-0">
-                  <span className="display text-xl sm:text-3xl md:text-4xl font-extrabold text-[#e4b84a] tracking-tight tabular-nums">
-                    {row.totalScore}
-                  </span>
-                  <span className="block text-[7px] sm:text-[10px] uppercase tracking-[0.16em] text-white/30 font-semibold">pts</span>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

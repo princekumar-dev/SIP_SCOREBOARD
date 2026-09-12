@@ -36,18 +36,25 @@ async function buildLeaderboard({ venueId, groupName } = {}) {
     totals.set(key, (totals.get(key) || 0) + Number(score.score || 0));
   }
 
-  const rows = tribes.map((tribe) => ({
-    id: String(tribe._id),
-    tribeCode: tribe.tribeCode,
-    tribeName: tribe.tribeName,
-    groupName: tribe.groupName || "",
-    venueId: tribe.venueId?._id ? String(tribe.venueId._id) : (tribe.venueId ? String(tribe.venueId) : ""),
-    venueName: tribe.venueId?.venueName || "Unallocated",
-    venueTheme: tribe.venueId?.theme || tribe.theme,
-    location: tribe.venueId?.location || "No Venue Allocated",
-    motif: tribe.venueId?.motif || "creative",
-    totalScore: totals.get(String(tribe._id)) || 0,
-  }));
+  const { GROUP_MAP } = require("../constants/groups");
+
+  const rows = tribes.map((tribe) => {
+    const gInfo = tribe.groupName ? GROUP_MAP[tribe.groupName] : null;
+    const themeName = tribe.theme || gInfo?.theme || tribe.venueId?.theme || "";
+    return {
+      id: String(tribe._id),
+      tribeCode: tribe.tribeCode,
+      tribeName: tribe.tribeName,
+      groupName: tribe.groupName || "",
+      theme: themeName,
+      venueId: tribe.venueId?._id ? String(tribe.venueId._id) : (tribe.venueId ? String(tribe.venueId) : ""),
+      venueName: tribe.venueId?.venueName || "Unallocated",
+      venueTheme: tribe.venueId?.theme || themeName,
+      location: tribe.venueId?.location || "No Venue Allocated",
+      motif: tribe.venueId?.motif || gInfo?.motif || "creative",
+      totalScore: totals.get(String(tribe._id)) || 0,
+    };
+  });
 
   return assignRanks(rows);
 }
