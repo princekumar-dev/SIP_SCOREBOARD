@@ -273,7 +273,7 @@ export function ScoreboardClient({
           </div>
 
           <div className="flex flex-wrap items-center justify-between md:justify-start gap-2.5 sm:gap-3 md:self-center">
-            <div className="flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-3 sm:px-4 py-1.5 sm:py-2 backdrop-blur-md">
+            <div className="flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
               <LiveBadge live={live} />
               <span suppressHydrationWarning className="text-[10px] sm:text-[11px] font-mono text-white/60">
                 {mounted ? formatTime(updated) : "—"}
@@ -325,7 +325,7 @@ export function ScoreboardClient({
         {/* Scoreboard Rows */}
         <div className="flex-1 space-y-2 sm:space-y-3 mt-2 sm:mt-3">
           {visible.length === 0 ? (
-            <div className="py-16 sm:py-24 text-center rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-8 animate-fade-in">
+            <div className="py-16 sm:py-24 text-center rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm p-5 sm:p-8 animate-fade-in shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4 opacity-30">📊</div>
               <p className="text-base sm:text-xl font-bold text-white/70">No scores recorded yet for this group.</p>
               <p className="mt-1 text-xs text-white/40">Evaluations submitted by venue hosts will appear live here instantly.</p>

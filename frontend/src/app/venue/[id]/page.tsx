@@ -22,8 +22,12 @@ export default async function VenuePage({ params }: { params: Promise<{ id: stri
   const isAllocated = Boolean(data.groupName && data.groupName !== "null");
 
   return (
-    <div className={`min-h-screen motif-${data.motif || "creative"}`}>
-      <div className="mx-auto max-w-6xl px-4 sm:px-5 py-8 sm:py-12">
+    <div className={`min-h-screen motif-${data.motif || "creative"} relative`}>
+      {/* Ambient orbs for depth */}
+      <div className="absolute top-20 right-10 w-[250px] h-[250px] bg-[#e4b84a]/[0.04] rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-20 left-10 w-[200px] h-[200px] bg-[#4b1d7a]/[0.05] rounded-full blur-[80px] pointer-events-none" />
+
+      <div className="mx-auto max-w-6xl px-4 sm:px-5 py-8 sm:py-12 relative">
         <div className="animate-fade-in-up">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#4b1d7a]/[0.08] border border-[#4b1d7a]/15 px-3 py-1 mb-3 sm:mb-4">
             <span className="text-[10px] font-bold tracking-[0.22em] text-[#4b1d7a]">
